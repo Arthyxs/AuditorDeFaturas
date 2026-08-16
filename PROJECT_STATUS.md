@@ -81,7 +81,9 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   `53d5196a9a24862aa4130ead2536caf48d0d79b1`;
 - commit técnico de conclusão do M04 presente localmente e em `origin/main`:
   `622581af718d73898438372bcc41e1a0c16f4906`;
-- commit técnico de M05 será registrado nesta seção imediatamente após o push;
+- commit técnico de conclusão do M05 presente localmente e em `origin/main`:
+  `fa78c0b47530c659af3f388768cdea3c8b46e737`;
+- divergência local/remoto após o push do M05: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -169,7 +171,9 @@ SameSite Strict, validação de origem e serialização do bootstrap.
 
 ## Último commit estável
 
-O hash técnico do M05 será registrado imediatamente após a criação e o push do checkpoint.
+`fa78c0b47530c659af3f388768cdea3c8b46e737` — `feat: secure M05 authentication and RBAC`
+
+Este commit contém a implementação, os testes, os gates e a memória de conclusão do M05.
 
 ## Próxima ação recomendada
 
