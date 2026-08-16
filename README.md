@@ -13,6 +13,26 @@ Compose. Regras de negócio e integrações ainda pertencem aos próximos milest
 
 ## Runtime canônico
 
+Para a primeira instalação, use o script do sistema operacional. Ele cria `.env`, gera os
+segredos internos, preserva valores existentes em execuções posteriores, cria os
+diretórios persistentes e inicia o Compose:
+
+```powershell
+.\scripts\setup.ps1
+```
+
+```bash
+./scripts/setup.sh
+```
+
+Os scripts solicitam host/usuário/senha IMAP e chave OpenAI sem imprimir valores secretos.
+Também aceitam as variáveis `INVOICE_AUDITOR_SETUP_IMAP_HOST`,
+`INVOICE_AUDITOR_SETUP_IMAP_USER`, `INVOICE_AUDITOR_SETUP_IMAP_PASSWORD` e
+`INVOICE_AUDITOR_SETUP_OPENAI_API_KEY` para instalação não interativa. `.env` é local e
+ignorado pelo Git; `.env.example` contém somente valores públicos e campos vazios.
+
+Após a configuração inicial:
+
 ```powershell
 docker compose up -d --build
 docker compose ps
@@ -22,6 +42,11 @@ O processo web fica disponível em `http://localhost:8000` e seu liveness em
 `http://localhost:8000/api/health/live`. Os três serviços possuem health checks. O banco
 usa volume nomeado e os diretórios operacionais usam bind mounts sob `data/`, que é
 ignorado pelo Git.
+
+As configurações são validadas antes do processo iniciar. `APP_SECRET_KEY`,
+`POSTGRES_PASSWORD` e `DATABASE_URL` são obrigatórios; placeholders, segredos internos
+curtos, timezone desconhecido e URL de banco fora de `postgresql+psycopg` são rejeitados.
+Representações e resumos operacionais mantêm valores secretos redigidos.
 
 ## Backend
 

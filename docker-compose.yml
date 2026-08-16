@@ -7,6 +7,8 @@ x-app-base: &app-base
   image: invoice-auditor:local
   init: true
   restart: unless-stopped
+  env_file:
+    - .env
   volumes:
     - ./data/tariffs:/app/data/tariffs
     - ./data/invoices:/app/data/invoices
@@ -20,7 +22,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-invoice_auditor}
       POSTGRES_USER: ${POSTGRES_USER:-invoice_auditor}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-invoice_auditor_dev_only}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/setup.ps1 or scripts/setup.sh first}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

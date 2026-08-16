@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M02 concluídos; M03 desbloqueado e não iniciado
+**Estado:** FECHADO E APROVADO — M00–M03 concluídos; M04 desbloqueado e não iniciado
 **Atualizado em:** 2026-08-16
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -336,6 +336,8 @@ ESLint e TypeScript passaram. Nenhuma migration ou funcionalidade futura foi ant
 
 ### M03 — Configuração, segredos e setup multiplataforma
 
+**Status:** COMPLETED — concluído em 2026-08-16; M04 desbloqueado.
+
 **Objetivo:** centralizar configuração validada e automatizar instalação segura.
 
 **Funcionalidades:** settings tipados; validação de segredos; geração de `APP_SECRET_KEY`/senha PostgreSQL; criação de diretórios; scripts Windows e Linux; ambientes dev/test/prod. O script Windows chama Docker/Compose nativos e não expõe WSL2 como dependência da aplicação.
@@ -347,6 +349,20 @@ ESLint e TypeScript passaram. Nenhuma migration ou funcionalidade futura foi ant
 **Testes necessários:** configurações válidas/inválidas; segredos ausentes; idempotência dos scripts; paths com espaços; garantia de que valores secretos não aparecem em logs.
 
 **Critério objetivo de conclusão:** uma instalação limpa exige somente os dados externos previstos, gera os segredos internos e inicia o Compose sem edição manual adicional.
+
+**Evidências de conclusão:** `Settings` tipado cobre ambientes dev/test/prod, timezone IANA,
+PostgreSQL, worker, storage, tolerâncias e a configuração externa prevista; segredos
+internos ausentes, curtos ou placeholders, ranges inválidos e URL de banco incompatível são
+rejeitados antes do startup; valores secretos permanecem redigidos em representações,
+resumo e logs. `setup.ps1` e `setup.sh` geram e preservam `APP_SECRET_KEY` e senha
+PostgreSQL, produzem `DATABASE_URL`, aceitam entradas externas sem imprimi-las e criam os
+diretórios persistentes. Idempotência e paths com espaços passaram nativamente no Windows
+e em Bash real dentro de container Linux. Uma instalação limpa pelo script Windows gerou
+segredos de 96 caracteres, construiu a imagem e iniciou os três serviços saudáveis sem
+edição manual. A autenticação PostgreSQL com a senha gerada, build Docker sem cache,
+liveness e persistência após recriação passaram. Suíte: 20 testes aprovados e 1 teste Linux
+condicionalmente ignorado no host Windows, coberto pela execução equivalente em container;
+Ruff, mypy, ESLint e TypeScript aprovados.
 
 ### M04 — Persistência, migrations e transações
 
