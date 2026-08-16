@@ -22,6 +22,9 @@ COPY pyproject.toml README.md ./
 COPY app/ ./app/
 RUN python -m pip install --no-cache-dir .
 
+COPY alembic.ini ./
+COPY migrations/ ./migrations/
+
 COPY --from=frontend-build /build/frontend/dist ./frontend/dist
 
 USER invoice-auditor

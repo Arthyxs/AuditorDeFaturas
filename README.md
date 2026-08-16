@@ -48,6 +48,21 @@ As configurações são validadas antes do processo iniciar. `APP_SECRET_KEY`,
 curtos, timezone desconhecido e URL de banco fora de `postgresql+psycopg` são rejeitados.
 Representações e resumos operacionais mantêm valores secretos redigidos.
 
+## Banco e migrations
+
+PostgreSQL é o único banco operacional. Mudanças de schema usam Alembic e os scripts de
+setup executam automaticamente o upgrade até a revisão atual. Para operação manual:
+
+```powershell
+docker compose exec -T app alembic current
+docker compose exec -T app alembic upgrade head
+```
+
+A fundação usa UUID gerado pela aplicação, timestamps com timezone apresentados em UTC
+pela sessão do banco, JSONB, enums de string com constraints nomeadas e `Decimal` mapeado
+por padrão para `NUMERIC(20,6)`. A revisão inicial estabelece a linhagem Alembic; tabelas de
+produto serão adicionadas somente nos milestones responsáveis por seus invariantes.
+
 ## Backend
 
 Crie e ative um ambiente virtual e instale o projeto com as dependências de desenvolvimento:

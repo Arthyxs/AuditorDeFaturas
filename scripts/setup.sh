@@ -142,6 +142,7 @@ if [[ "$skip_docker" == false ]]; then
     (
         cd -- "$project_root"
         docker compose up -d --build --wait --wait-timeout 120
+        docker compose exec -T app alembic upgrade head
     )
-    printf 'InvoiceAuditor services are running.\n'
+    printf 'InvoiceAuditor services are running and database migrations are current.\n'
 fi

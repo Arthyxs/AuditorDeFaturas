@@ -2,20 +2,19 @@
 
 **Atualizado em:** 2026-08-16
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** runtime e configuração segura concluídos; persistência é a próxima etapa
+**Fase atual:** fundação executável, segura e persistente concluída até M04
 **Macroetapa atual:** B — Fundação executável, segura e persistente
-**Milestone atual:** nenhum em execução; M03 validado e concluído, M04 desbloqueado
+**Milestone atual:** nenhum em execução; M04 validado e concluído, M05 desbloqueado
 
 ## Resumo executivo
 
-M00–M03 estão concluídos. Além do runtime canônico, a aplicação agora carrega configuração
-tipada e validada, recusa segredos internos inseguros e mantém valores secretos redigidos.
-Os scripts Windows/Linux criam uma instalação idempotente, geram os segredos internos e
-iniciam o Compose sem edição manual do `.env`.
+M00–M04 estão concluídos. O runtime/configuração agora possui fundação PostgreSQL real com
+SQLAlchemy 2, psycopg, Alembic, sessões transacionais, repository e unit of work. As
+convenções de UUID, UTC, JSONB, enums nomeados e `NUMERIC(20,6)` foram provadas em bancos
+PostgreSQL descartáveis, sem antecipar tabelas de produto.
 
-Nenhuma regra de negócio, modelo de persistência, migration, integração, autenticação ou
-job futuro foi antecipado. O worker do M02 mantém apenas o processo e seu heartbeat; jobs
-duráveis permanecem no M09.
+Nenhuma regra de negócio, entidade futura, integração, autenticação ou job foi antecipado.
+O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis permanecem no M09.
 
 ## Milestones concluídos
 
@@ -23,8 +22,9 @@ duráveis permanecem no M09.
 - **M01 — Estrutura executável e qualidade básica:** concluído em 2026-08-16.
 - **M02 — Runtime Docker Compose e PostgreSQL:** concluído em 2026-08-16.
 - **M03 — Configuração, segredos e setup multiplataforma:** concluído em 2026-08-16.
+- **M04 — Persistência, migrations e transações:** concluído em 2026-08-16.
 
-## Estrutura entregue até M03
+## Estrutura entregue até M04
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -47,11 +47,16 @@ duráveis permanecem no M09.
 - `setup.ps1` e `setup.sh` idempotentes, com geração criptográfica de segredos internos;
 - `.env.example` sem credenciais/placeholders e `.env` operacional ignorado pelo Git;
 - timezone IANA portável no Windows/Linux por `tzdata`.
+- SQLAlchemy 2/psycopg, engine UTC, session factory e contexto transacional;
+- repository SQLAlchemy genérico e unit of work explícito;
+- base declarativa com UUID, UTC, JSONB, enums/constraints e `NUMERIC(20,6)`;
+- Alembic e baseline `20260816_0001`, sem tabelas futuras simuladas;
+- setup Windows/Linux executando `alembic upgrade head` após o startup;
+- override Compose de teste expondo PostgreSQL somente em `127.0.0.1:55432`.
 
 ## Trabalho não iniciado
 
-- M04–M26;
-- modelo de banco, sessão, repositories, unit of work e migrations;
+- M05–M26;
 - autenticação, storage, tarifários e interfaces de produto;
 - IMAP, OpenAI e demais integrações;
 - regras financeiras, auditoria, relatórios e golden cases.
@@ -67,7 +72,7 @@ duráveis permanecem no M09.
   `1c9c4adf2feeb2b88a653b0a89899f184efe1043`;
 - commit técnico de conclusão do M03 presente localmente e em `origin/main`:
   `53d5196a9a24862aa4130ead2536caf48d0d79b1`;
-- divergência local/remoto após o push do M03: `0` à frente, `0` atrás;
+- commit técnico de M04 será registrado nesta seção imediatamente após o push;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -106,13 +111,26 @@ duráveis permanecem no M09.
 - logs do Compose: nenhum segredo interno encontrado;
 - recriação de containers: persistência do M02 preservada, tabela de regressão removida.
 
+### Persistência e migrations validadas no M04
+
+- migration de banco vazio até head: **PASS** em PostgreSQL real descartável;
+- base → head, downgrade base e novo upgrade: **PASS**;
+- transações/repository/unit of work: **PASS** para commit, rollback e recuperação;
+- constraints únicas/check/enum: **PASS**;
+- `Decimal`/`NUMERIC(20,6)`, JSONB, UUID e UTC: **PASS**;
+- `alembic current`: `20260816_0001 (head)`;
+- `alembic check`: **PASS**, nenhum drift;
+- revisão e dado decimal sobreviveram à recriação; tabela descartável removida;
+- nenhum banco descartável de teste permaneceu no cluster.
+
 ## Status de testes, build e execução
 
-- backend/unit/integration tests: **PASS**, 20 testes; 1 skip condicional do setup Linux no
-  host Windows, executado separadamente com sucesso em container Linux;
+- suíte com PostgreSQL real: **PASS**, 23 testes; 1 skip condicional do setup Linux no host
+  Windows, já executado separadamente em container Linux;
+- suíte local sem exposição do banco: **PASS**, 20 testes; 4 skips condicionais esperados;
 - Python lint (`ruff check`): **PASS**;
-- Python format check (`ruff format --check`): **PASS**, 52 arquivos formatados;
-- Python type check (`mypy`, modo estrito): **PASS**, 44 arquivos verificados;
+- Python format check (`ruff format --check`): **PASS**, 61 arquivos formatados;
+- Python type check (`mypy`, modo estrito): **PASS**, 50 arquivos verificados;
 - frontend lint (`eslint`): **PASS**;
 - frontend TypeScript type check (`tsc -b`): **PASS**;
 - frontend production build: **PASS** dentro do build Docker sem cache, Vite 8.2.1;
@@ -123,22 +141,20 @@ duráveis permanecem no M09.
 - artefatos locais `.venv`, caches, `node_modules` e `frontend/dist`: ignorados pelo Git;
 - configuração válida/inválida e segredo ausente: **PASS**;
 - idempotência/paths/logs de setup: **PASS** Windows e Linux;
-- migrations: ainda não aplicável; começam no M04.
+- migrations: **PASS**, head aplicado, downgrade/upgrade e drift check aprovados.
 
 ## Bloqueios, riscos e findings
 
-Nenhum bloqueio técnico ou finding aberto para iniciar M04. Dependências externas futuras
-continuam documentadas no plano e não afetam M04.
+Nenhum bloqueio técnico ou finding aberto para iniciar M05. Dependências externas futuras
+continuam documentadas no plano e não afetam M05.
 
-`CODE_REVIEW.md` permanece sem findings. `DECISIONS.md` não foi alterado porque o M03
-concretizou a especificação e ADR-015 sem introduzir nova decisão arquitetural.
+`CODE_REVIEW.md` permanece sem findings. `DECISIONS.md` recebeu ADR-017 com as convenções
+de persistência efetivamente testadas no M04.
 
 ## Último commit estável
 
-`53d5196a9a24862aa4130ead2536caf48d0d79b1` — `feat: establish secure M03 configuration`
-
-Este commit contém a implementação, os testes, os gates e a memória de conclusão do M03.
+O hash técnico do M04 será registrado imediatamente após a criação e o push do checkpoint.
 
 ## Próxima ação recomendada
 
-Iniciar somente M04 — Persistência, migrations e transações.
+Iniciar somente M05 — Autenticação, bootstrap e RBAC.

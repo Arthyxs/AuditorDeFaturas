@@ -139,8 +139,9 @@ if (-not $SkipDocker) {
         docker version --format '{{.Server.Version}}' | Out-Null
         docker compose version | Out-Null
         docker compose up -d --build --wait --wait-timeout 120
+        docker compose exec -T app alembic upgrade head
     } finally {
         Pop-Location
     }
-    Write-Output 'InvoiceAuditor services are running.'
+    Write-Output 'InvoiceAuditor services are running and database migrations are current.'
 }

@@ -1,7 +1,7 @@
 # InvoiceAuditor — Decisões Arquiteturais
 
 **Estado do documento:** decisões aceitas
-**Atualizado em:** 2026-08-15
+**Atualizado em:** 2026-08-16
 
 Somente decisões arquiteturais relevantes são registradas aqui. A arquitetura geral e as decisões abaixo foram aprovadas pelo usuário em 2026-08-15. A especificação v3.0 permanece autoridade superior, acrescida dos requisitos explicitamente aprovados para auditoria manual e homologação.
 
@@ -148,3 +148,12 @@ Somente decisões arquiteturais relevantes são registradas aqui. A arquitetura 
 **Decisão:** manter conjunto de referência versionado com pelo menos quatro casos simples, quatro médios, quatro difíceis e quatro muito difíceis, com ground truth por documento e possibilidade de extensão privada por documentos reais anonimizados. Medir document accuracy, false positive rate, false negative rate e pending rate no agregado e por dificuldade/origem/formato/modelo. Documento realmente `INCORRECT` classificado `CORRECT` é falso negativo, gera finding `CRITICAL` e bloqueia milestone/release; o gate exige zero falsos negativos observados no conjunto versionado efetivamente executado. Esse resultado é evidência empírica restrita à matriz/execuções e não uma garantia estatística de taxa zero sobre dados de produção ainda não vistos.
 
 **Consequências:** qualidade passa a ser mensurável e comparável entre prompts/modelos; golden cases e resultados precisam de versão; homologação real tem custo e repetição, mas nenhum ganho agregado pode mascarar falso negativo.
+
+## ADR-017 — Convenções de persistência PostgreSQL
+
+**Status:** ACCEPTED
+**Contexto:** M04 exige IDs, timestamps, JSONB, enums, valores decimais, migrations e nomes de constraints consistentes antes da criação das entidades de produto.
+
+**Decisão:** usar UUID v4 gerado pela aplicação e coluna PostgreSQL `UUID` para IDs; `TIMESTAMP WITH TIME ZONE` com sessões PostgreSQL fixadas em UTC; `JSONB` para objetos estruturados; enums de string com validação e `CHECK` nomeado; e `NUMERIC(20,6)` como mapeamento decimal financeiro padrão, permitindo override explícito quando uma entidade futura exigir escala maior. Todas as constraints seguem naming convention do SQLAlchemy e toda mudança de schema passa por Alembic. A revisão inicial cria somente a linhagem Alembic; tabelas de produto entram nos milestones que possuem seus invariantes e critérios.
+
+**Consequências:** banco e Python preservam precisão/auditabilidade e migrations têm nomes determinísticos; UUIDs não dependem de extensão do servidor; seis casas decimais preservam valores brutos intermediários usuais, enquanto arredondamento de apresentação continua explícito; entidades futuras não são antecipadas como placeholders.

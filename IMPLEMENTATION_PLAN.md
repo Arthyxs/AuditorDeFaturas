@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M03 concluídos; M04 desbloqueado e não iniciado
+**Estado:** FECHADO E APROVADO — M00–M04 concluídos; M05 desbloqueado e não iniciado
 **Atualizado em:** 2026-08-16
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -366,6 +366,8 @@ Ruff, mypy, ESLint e TypeScript aprovados.
 
 ### M04 — Persistência, migrations e transações
 
+**Status:** COMPLETED — concluído em 2026-08-16; M05 desbloqueado, não iniciado.
+
 **Objetivo:** criar a fundação consistente do modelo de dados.
 
 **Funcionalidades:** sessão SQLAlchemy 2; Alembic; tipos/enums compartilhados; convenções de IDs, UTC, JSONB e `NUMERIC`; repositories e unit of work.
@@ -377,6 +379,20 @@ Ruff, mypy, ESLint e TypeScript aprovados.
 **Testes necessários:** upgrade em banco vazio; upgrade a partir da revisão anterior; constraints e transações; rollback; precisão de `NUMERIC`; timestamps UTC.
 
 **Critério objetivo de conclusão:** migrations criam o esquema-base em PostgreSQL real, testes de transação passam e nenhum valor monetário usa float.
+
+**Evidências de conclusão:** SQLAlchemy 2 e psycopg criam engines PostgreSQL com timezone de
+sessão UTC, factory de sessões, contexto transacional, repository genérico e unit of work
+com commit/rollback explícitos. A base declarativa estabelece UUID v4/UUID PostgreSQL,
+JSONB, timestamps com timezone, enums string validados com `CHECK`, naming convention e
+`Decimal` → `NUMERIC(20,6)`. Alembic possui baseline reversível
+`20260816_0001`, incluído na imagem e aplicado pelos scripts de setup; nenhuma tabela de
+produto futura foi antecipada. Em bancos PostgreSQL reais e descartáveis passaram: upgrade
+de banco vazio, downgrade para base seguido de novo upgrade, commit, rollback forçado,
+recuperação após constraint, precisão decimal de seis casas, JSONB, UUID, enum/constraints
+e timestamp UTC. `alembic check` não detectou drift; revisão e dados `NUMERIC` sobreviveram
+à recriação dos containers. Suíte real: 23 aprovados e 1 skip Linux condicional já coberto
+em container; suíte local sem porta de teste: 20 aprovados e 4 skips condicionais; Ruff,
+mypy, ESLint, TypeScript, build Docker sem cache e health dos três serviços aprovados.
 
 ### M05 — Autenticação, RBAC e primeiro administrador
 
