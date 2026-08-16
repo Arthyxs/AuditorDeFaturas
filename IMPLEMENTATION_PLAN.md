@@ -1,8 +1,8 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00 concluído; M01 aguarda autorização explícita
-**Atualizado em:** 2026-08-15
+**Estado:** FECHADO E APROVADO — M00 e M01 concluídos; M02 desbloqueado e não iniciado
+**Atualizado em:** 2026-08-16
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
 ## 1. Objetivo e guardrails
@@ -294,7 +294,7 @@ Além do critério específico de cada milestone, sua conclusão exige, quando a
 
 ### M01 — Estrutura executável e qualidade básica
 
-**Status:** NOT_STARTED — desbloqueado por M00 e aguardando autorização explícita para implementação.
+**Status:** COMPLETED — concluído em 2026-08-16; M02 desbloqueado.
 
 **Objetivo:** criar a estrutura final sem implementar regras de negócio.
 
@@ -307,6 +307,8 @@ Além do critério específico de cada milestone, sua conclusão exige, quando a
 **Testes necessários:** import do pacote; teste unitário de smoke; build TypeScript; lint e type check dos dois projetos.
 
 **Critério objetivo de conclusão:** backend e frontend iniciam em modo de desenvolvimento; todos os gates configurados passam; não há funcionalidade simulada apresentada como pronta.
+
+**Evidências de conclusão:** pacote Python 3.12+ e aplicação FastAPI mínima importáveis; estrutura de camadas aprovada criada sem implementações futuras simuladas; `pytest` com 2 testes de smoke aprovados; Ruff lint aprovado; Ruff format check aprovado em 43 arquivos; mypy estrito aprovado em 35 arquivos; frontend React/TypeScript/Vite com ESLint aprovado; TypeScript type check aprovado; build Vite 8.2.1 aprovado; backend Uvicorn em modo de desenvolvimento respondeu HTTP 200 em `/docs`; frontend Vite em modo de desenvolvimento respondeu HTTP 200 na raiz; revisão de segredos e artefatos confirmou somente placeholders `CHANGE_ME` no `.env.example` e diretórios gerados corretamente ignorados pelo Git.
 
 ### M02 — Runtime Docker Compose e PostgreSQL
 

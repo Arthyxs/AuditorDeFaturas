@@ -1,129 +1,113 @@
 # InvoiceAuditor — Estado do Projeto
 
-**Atualizado em:** 2026-08-15
+**Atualizado em:** 2026-08-16
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** planejamento formalmente encerrado e aprovado / ambiente pronto
-**Macroetapa atual:** B — Fundação executável, segura e persistente, ainda não iniciada
-**Milestone atual:** nenhum em execução; M00 concluído e M01 aguarda autorização explícita
+**Fase atual:** fundação executável iniciada
+**Macroetapa atual:** B — Fundação executável, segura e persistente
+**Milestone atual:** nenhum em execução; M01 concluído e M02 desbloqueado, ainda não iniciado
 
 ## Resumo executivo
 
-O repositório contém somente governança, especificação, configuração de exemplo e documentos de planejamento. Não existe código de aplicação, migration, teste, Dockerfile ou Compose. A arquitetura geral, as quatro definições antes abertas e as ADRs atuais foram aprovadas em 2026-08-15.
+M00 e M01 estão concluídos. O repositório agora contém o esqueleto executável final do
+backend modular em Python/FastAPI e do frontend React/TypeScript/Vite, além dos gates de
+teste, lint, formatação, type check e build previstos para o M01.
 
-Não foi encontrada contradição técnica que impeça o produto. O plano inclui macroetapas, auditoria manual convergente com o pipeline IMAP, golden cases estratificados e métricas formais de qualidade. M00 foi concluído; isso remove o bloqueio técnico, mas M01 continua não iniciado até autorização explícita do usuário.
-
-A fase de planejamento foi formalmente encerrada em 2026-08-15. Não há decisão arquitetural pendente.
+Nenhuma regra de negócio, persistência, migration, integração, autenticação, worker
+funcional, endpoint de produto ou runtime Docker do projeto foi antecipado. Esses itens
+permanecem nos milestones próprios, a partir do M02.
 
 ## Milestones concluídos
 
 - **M00 — Aprovação do plano e prontidão do ambiente:** concluído em 2026-08-15.
+- **M01 — Estrutura executável e qualidade básica:** concluído em 2026-08-16.
 
-## Trabalho concluído nesta fase
+## Estrutura entregue no M01
 
-- leitura integral de `AGENTS.md`;
-- leitura integral das 2.562 linhas de `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md`;
-- leitura de `GIT_WORKFLOW.md`, `CODE_REVIEW.md`, `.env.example` e `.gitignore`;
-- inventário do repositório;
-- inspeção do ambiente Windows, Git, Docker/WSL e toolchains disponíveis;
-- validação documental dos IDs `gpt-5.6-luna`, `gpt-5.6-terra` e `gpt-5.6-sol` na documentação oficial da OpenAI;
-- aprovação das quatro definições de produto e das ADRs;
-- criação de sete macroetapas sem remover M00–M26;
-- inclusão do fluxo de auditoria manual pelo frontend/API sobre o mesmo pipeline do IMAP;
-- definição de baseline com 16+ golden cases em quatro dificuldades;
-- definição de document accuracy, false positive rate, false negative rate e pending rate, com falso negativo crítico;
-- explicitação de que WSL2 é requisito apenas do ambiente Windows atual, não da arquitetura;
-- validação de WSL2 padrão versão 2 com distribuição `docker-desktop`;
-- validação de Docker Client/Engine 29.7.2, Docker Desktop 4.86.0 e Docker Compose 5.3.1;
-- execução bem-sucedida de `hello-world` em container Linux `amd64`;
-- configuração de `main` para rastrear `origin/main` e validação de `git push --dry-run origin main` com resultado `Everything up-to-date`.
-- escopo do gate de falso negativo explicitado como zero ocorrências observadas no conjunto versionado executado, sem promessa estatística sobre produção futura;
-- dependências de M14 separadas entre núcleo/manual (`auth`, storage e jobs) e adapter IMAP (ingestão/classificação adicionais).
+- `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
+- pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
+  cálculo, infraestrutura, relatórios e worker;
+- factory e entry point FastAPI mínimos, sem efeitos de infraestrutura ou endpoints futuros;
+- `tests/` com smoke tests e diretórios reservados para as suítes aprovadas;
+- Ruff para lint e formatação;
+- mypy em modo estrito como solução documentada de type checking Python;
+- frontend mínimo React/TypeScript/Vite com estrutura `api`, `auth`, `components`,
+  `features`, `pages` e `routes`;
+- ESLint, TypeScript type check, build de produção e lockfile npm;
+- `README.md` com requisitos, comandos de desenvolvimento, gates e limites do M01.
 
 ## Trabalho não iniciado
 
-- todos os milestones M01–M26;
-- código backend/frontend;
-- banco e migrations;
-- testes e golden cases;
-- integrações IMAP/OpenAI;
-- documentação operacional final.
+- M02–M26;
+- Dockerfile, Docker Compose e PostgreSQL do projeto;
+- endpoint de liveness e processo worker executável;
+- configuração operacional, banco e migrations;
+- autenticação, storage, tarifários e interfaces de produto;
+- IMAP, OpenAI e demais integrações;
+- regras financeiras, auditoria, relatórios e golden cases.
 
 ## Estado do repositório e Git
 
 - branch atual: `main`;
-- working tree antes da criação destes documentos: limpa;
+- upstream: `main` rastreia `origin/main`;
 - remoto: `origin` configurado para `https://github.com/Arthyxs/AuditorDeFaturas.git`;
-- commit de conclusão de M00 presente localmente e em `origin/main`: `5200a24dd547c5ee3ba6b6209e4c116e683bfe7c`;
-- divergência local/remoto observada: `0` à frente, `0` atrás;
-- upstream local: `main` rastreia `origin/main`;
-- working tree após o push de M00: limpa.
+- commit técnico de conclusão do M01: a registrar após a criação do commit;
+- divergência local/remoto antes dos commits do M01: `0` à frente, `0` atrás;
+- revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
+  conjunto destinado ao commit.
 
 ## Estado do ambiente
 
-### Disponível
+### Toolchains usados no M01
 
-- Windows reportado pelo PowerShell como Microsoft Windows 10.0.26200;
-- PowerShell 7.6.4;
-- Git 2.53.0.windows.3;
-- Node.js 24.19.0 e npm 11.17.0 no sistema;
-- ripgrep 15.2.0;
-- runtime Python 3.12.13 fornecido pelo ambiente do Codex;
-- runtime Node/pnpm também fornecido pelo ambiente do Codex.
+- Python 3.12.13 em ambiente virtual local ignorado pelo Git;
+- FastAPI 0.141.1 e Uvicorn 0.52.3;
+- pytest 9.1.1, Ruff 0.16.3 e mypy 1.20.2;
+- Node.js 24.19.0 e npm 11.17.0;
+- React 19.2.8, TypeScript 6.0.3 e Vite 8.2.1;
+- ESLint 10.8.1.
 
-### Ausente ou não operacional
-
-- Python não está instalado globalmente no `PATH` do usuário, embora exista o runtime isolado do Codex;
-- inventário detalhado de hardware/virtualização via CIM foi negado pelas permissões atuais.
-
-### Runtime canônico validado
+### Runtime canônico validado no M00
 
 - WSL2: distribuição padrão `docker-desktop`, versão padrão 2;
 - Docker Client/Engine: 29.7.2;
 - Docker Desktop: 4.86.0, contexto `desktop-linux`, Engine Linux `amd64`;
 - Docker Compose: 5.3.1;
-- smoke externo: `docker run --rm hello-world` concluído com sucesso.
+- `docker run --rm hello-world`: aprovado no M00.
 
-## Status de testes, build e Docker
+Uma reinspeção dentro da sessão restrita do M01 confirmou o Docker CLI e o Compose, mas
+o acesso ao daemon foi negado pelo sandbox desta sessão. Isso não afeta o M01, que não
+possui build ou serviços Docker; a evidência operacional bloqueante permanece a validação
+concluída no M00.
 
-- testes: não existem; não executados;
-- lint/type checks: não configurados;
-- migrations: não existem;
-- Docker CLI/Engine/Compose: disponíveis e validados;
-- Docker build do projeto: não existe para executar, pois M01/M02 ainda não começaram;
-- Docker Compose do projeto: não existe para executar;
-- serviços em execução: nenhum serviço do projeto existe.
+## Status de testes, build e execução
 
-## Bloqueios e riscos conhecidos
+- backend smoke tests: **PASS**, 2 testes;
+- Python lint (`ruff check`): **PASS**;
+- Python format check (`ruff format --check`): **PASS**, 43 arquivos formatados;
+- Python type check (`mypy`, modo estrito): **PASS**, 35 arquivos verificados;
+- frontend lint (`eslint`): **PASS**;
+- frontend TypeScript type check (`tsc -b`): **PASS**;
+- frontend production build (`vite build`): **PASS**, Vite 8.2.1;
+- backend em modo de desenvolvimento: **PASS**, startup completo e HTTP 200 em `/docs`;
+- frontend em modo de desenvolvimento: **PASS**, startup completo e HTTP 200 na raiz;
+- scan de segredos/artefatos: **PASS**, apenas placeholders `CHANGE_ME` no `.env.example`;
+- artefatos locais `.venv`, caches, `node_modules` e `frontend/dist`: ignorados pelo Git;
+- migrations: não aplicável ao M01; começam no M04;
+- Docker build/Compose do projeto: não aplicável ao M01; começam no M02.
 
-### Bloqueios atuais
+## Bloqueios, riscos e findings
 
-Nenhum bloqueio técnico conhecido para iniciar M01. O único gate restante é autorização explícita do usuário.
+Nenhum bloqueio técnico ou finding aberto para iniciar M02. Dependências externas futuras
+continuam documentadas no plano e não afetam o M01.
 
-### Dependências externas futuras
-
-- credenciais IMAP serão necessárias para contract test real; testes fake/mock não comprovam a conta real;
-- API key e acesso da conta aos modelos serão necessários para contract test real;
-- documentos reais não devem entrar no Git; golden cases versionados usam amostras sintéticas/licenciadas, enquanto casos reais anonimizados ficam em área privada ignorada pelo Git.
-
-### Decisões aprovadas, não bloqueios
-
-1. `EMAIL_CLASSIFICATION_MIN_CONFIDENCE=0.80` inicial e configurável;
-2. bootstrap do primeiro admin por token único gerado pelo setup;
-3. correção humana como nova revisão imutável, sem mutar o run de IA;
-4. reanálise parcial publicada como revisão completa com linhagem dos resultados não reanalisados;
-5. auditoria manual `ADMIN`/`OPERATOR` convergindo para o mesmo pipeline do IMAP;
-6. falso negativo como finding `CRITICAL` e bloqueio de release no conjunto versionado executado, sem alegação de garantia estatística sobre documentos de produção não vistos.
-
-## Findings de code review
-
-Nenhum finding aberto. Ainda não há código para revisar.
+`CODE_REVIEW.md` permanece sem findings. `DECISIONS.md` não foi alterado porque o M01 não
+exigiu nova decisão arquitetural; mypy já era uma escolha prevista pelo plano e foi apenas
+concretizado como ferramenta de qualidade.
 
 ## Último commit estável
 
-`5200a24dd547c5ee3ba6b6209e4c116e683bfe7c` — `docs: approve architecture and complete M00`
-
-Este commit contém os três documentos de planejamento aprovados, registra M00 como concluído e foi enviado para `origin/main`. O commit documental subsequente apenas registra este hash em `PROJECT_STATUS.md`.
+Commit técnico de conclusão do M01 a registrar após o commit e o push.
 
 ## Próxima ação recomendada
 
-Planejamento formalmente encerrado. Aguardar autorização explícita do usuário para iniciar M01; não implementar código antes dessa autorização.
+Em uma nova sessão autorizada, iniciar somente M02 — Runtime Docker Compose e PostgreSQL.
