@@ -50,8 +50,9 @@ permanecem nos milestones próprios, a partir do M02.
 - branch atual: `main`;
 - upstream: `main` rastreia `origin/main`;
 - remoto: `origin` configurado para `https://github.com/Arthyxs/AuditorDeFaturas.git`;
-- commit técnico de conclusão do M01: a registrar após a criação do commit;
-- divergência local/remoto antes dos commits do M01: `0` à frente, `0` atrás;
+- commit técnico de conclusão do M01 presente localmente e em `origin/main`:
+  `5609f919b967b163dd9c495a5b8c9e55779f7395`;
+- divergência local/remoto após o push do M01: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -106,7 +107,10 @@ concretizado como ferramenta de qualidade.
 
 ## Último commit estável
 
-Commit técnico de conclusão do M01 a registrar após o commit e o push.
+`5609f919b967b163dd9c495a5b8c9e55779f7395` — `feat: establish executable M01 skeleton`
+
+Este commit contém a implementação, os gates e a memória de conclusão do M01. O commit
+documental subsequente registra este hash em `PROJECT_STATUS.md`.
 
 ## Próxima ação recomendada
 
