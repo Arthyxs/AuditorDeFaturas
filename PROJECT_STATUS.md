@@ -72,7 +72,9 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   `1c9c4adf2feeb2b88a653b0a89899f184efe1043`;
 - commit técnico de conclusão do M03 presente localmente e em `origin/main`:
   `53d5196a9a24862aa4130ead2536caf48d0d79b1`;
-- commit técnico de M04 será registrado nesta seção imediatamente após o push;
+- commit técnico de conclusão do M04 presente localmente e em `origin/main`:
+  `622581af718d73898438372bcc41e1a0c16f4906`;
+- divergência local/remoto após o push do M04: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -153,7 +155,9 @@ de persistência efetivamente testadas no M04.
 
 ## Último commit estável
 
-O hash técnico do M04 será registrado imediatamente após a criação e o push do checkpoint.
+`622581af718d73898438372bcc41e1a0c16f4906` — `feat: establish M04 persistence foundation`
+
+Este commit contém a implementação, os testes, os gates e a memória de conclusão do M04.
 
 ## Próxima ação recomendada
 
