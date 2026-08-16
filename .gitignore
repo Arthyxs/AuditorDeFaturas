@@ -1,0 +1,79 @@
+# Secrets / environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# Operational/private data
+data/
+backups/
+uploads/
+runtime/
+private/
+production-data/
+
+# Logs
+*.log
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+venv/
+env/
+dist/
+build/
+*.egg-info/
+
+# Node / frontend
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+frontend/dist/
+frontend/.vite/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker/local
+Docker-compose.override.yml
+docker-compose.override.yml
+*.pid
+
+# Temp
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Local DB/dumps
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql.gz
+
+# Real/private test data
+tests/real_data/
+tests/private_data/
