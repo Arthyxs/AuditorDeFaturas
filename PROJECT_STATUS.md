@@ -57,7 +57,9 @@ duráveis permanecem no M09.
 - remoto: `origin` configurado para `https://github.com/Arthyxs/AuditorDeFaturas.git`;
 - commit técnico de conclusão do M01 presente em `origin/main`:
   `5609f919b967b163dd9c495a5b8c9e55779f7395`;
-- commit técnico de M02 será registrado nesta seção imediatamente após o push;
+- commit técnico de conclusão do M02 presente localmente e em `origin/main`:
+  `1c9c4adf2feeb2b88a653b0a89899f184efe1043`;
+- divergência local/remoto após o push do M02: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -106,13 +108,14 @@ duráveis permanecem no M09.
 Nenhum bloqueio técnico ou finding aberto para iniciar M03. Dependências externas futuras
 continuam documentadas no plano e não afetam M03.
 
-`CODE_REVIEW.md` permanece sem findings. `DECISIONS.md` não foi alterado porque o M01 não
-exigiu nova decisão arquitetural; mypy já era uma escolha prevista pelo plano e foi apenas
-concretizado como ferramenta de qualidade.
+`CODE_REVIEW.md` permanece sem findings. `DECISIONS.md` não foi alterado porque o M02
+apenas concretizou ADR-001, ADR-010 e ADR-015, sem introduzir nova decisão arquitetural.
 
 ## Último commit estável
 
-O hash técnico do M02 será registrado imediatamente após a criação e o push do checkpoint.
+`1c9c4adf2feeb2b88a653b0a89899f184efe1043` — `feat: establish M02 Docker runtime`
+
+Este commit contém a implementação, os testes, os gates e a memória de conclusão do M02.
 
 ## Próxima ação recomendada
 
