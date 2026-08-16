@@ -92,7 +92,9 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   `622581af718d73898438372bcc41e1a0c16f4906`;
 - commit técnico de conclusão do M05 presente localmente e em `origin/main`:
   `fa78c0b47530c659af3f388768cdea3c8b46e737`;
-- commit técnico de M06 será registrado nesta seção imediatamente após o push;
+- commit técnico de conclusão do M06 presente localmente e em `origin/main`:
+  `cb112e223018b939bca646007633caae2510234a`;
+- divergência local/remoto após o push do M06: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -188,7 +190,9 @@ diretório, sidecar mínimo, verificação em leitura e autorização explícita
 
 ## Último commit estável
 
-O hash técnico do M06 será registrado imediatamente após a criação e o push do checkpoint.
+`cb112e223018b939bca646007633caae2510234a` — `feat: add immutable M06 local storage`
+
+Este commit contém a implementação, os testes, os gates e a memória de conclusão do M06.
 
 ## Próxima ação recomendada
 
