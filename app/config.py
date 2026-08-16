@@ -71,6 +71,7 @@ class Settings(BaseSettings):
 
     storage_provider: str = "local"
     storage_root: Path = Path("/app/data")
+    upload_max_size_bytes: int = Field(default=25 * 1024 * 1024, ge=1, le=1024 * 1024 * 1024)
 
     audit_absolute_tolerance: Decimal = Decimal("0.01")
     audit_percent_tolerance: Decimal = Decimal("0")
@@ -123,6 +124,7 @@ class Settings(BaseSettings):
             "worker_enabled": self.worker_enabled,
             "storage_provider": self.storage_provider,
             "storage_root": str(self.storage_root),
+            "upload_max_size_bytes": self.upload_max_size_bytes,
         }
 
 

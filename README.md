@@ -76,6 +76,22 @@ por cookie HTTPOnly, SameSite Strict e Secure quando `APP_BASE_URL` usa HTTPS; o
 guarda somente o SHA-256 do token. Logout revoga a sessão no servidor. Rotas podem exigir
 `ADMIN`, `OPERATOR` ou `VIEWER`, e mutações autenticadas validam a origem configurada.
 
+## Storage local e uploads
+
+`StorageProvider` mantém a aplicação independente do backend de arquivos;
+`LocalStorageProvider` é o adapter operacional inicial sob `STORAGE_ROOT`. O limite padrão
+de upload é 25 MiB e pode ser reduzido por `UPLOAD_MAX_SIZE_BYTES`. Arquivos aceitos recebem
+UUID e nome interno, são gravados por streaming com SHA-256 e `fsync`, e o blob com seu
+sidecar de metadata é publicado por rename atômico no mesmo filesystem. Leituras conferem
+novamente tamanho e hash antes de retornar bytes.
+
+Uploads aceitam tecnicamente PDF, XLSX, XLS, CSV, PNG, JPEG e TIFF, com conferência de nome,
+extensão, MIME declarado e estrutura/assinatura mínima. Traversal, conteúdo divergente,
+arquivos vazios/truncados, ZIPs com expansão insegura, formatos executáveis e tamanho
+excedido são rejeitados. Arquivos persistidos não recebem bits de execução. Exclusão física
+é negada sem motivo explícito e confirmação de referências liberadas; soft delete pertence
+às entidades de produto dos próximos milestones.
+
 ## Backend
 
 Crie e ative um ambiente virtual e instale o projeto com as dependências de desenvolvimento:
@@ -113,6 +129,6 @@ O build de produção é gerado em `frontend/dist/`, diretório ignorado pelo Gi
 
 ## Limites atuais
 
-Esta etapa não expõe APIs de tarifários, faturas ou auditoria, jobs duráveis, integrações ou
+Esta etapa não expõe catálogo/API de tarifários, faturas ou auditoria, jobs duráveis, integrações ou
 regras de auditoria. O worker do M02 publica somente o heartbeat de processo
 necessário para validar o runtime; scheduling e jobs começam nos milestones próprios.

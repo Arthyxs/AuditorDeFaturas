@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M05 concluídos; M06 desbloqueado e não iniciado
+**Estado:** FECHADO E APROVADO — M00–M06 concluídos; M07 desbloqueado e não iniciado
 **Atualizado em:** 2026-08-16
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -421,6 +421,8 @@ Ruff, mypy estrito, ESLint, TypeScript, build Docker e health dos três serviço
 
 ### M06 — Storage local imutável e uploads seguros
 
+**Status:** COMPLETED — concluído em 2026-08-16; M07 desbloqueado, não iniciado.
+
 **Objetivo:** preservar arquivos com integridade e segurança.
 
 **Funcionalidades:** porta `StorageProvider`; adapter local; gravação atômica; SHA-256; nomes internos; leitura/metadata; exclusão controlada; validação MIME/extensão/tamanho/path traversal.
@@ -432,6 +434,16 @@ Ruff, mypy estrito, ESLint, TypeScript, build Docker e health dos três serviço
 **Testes necessários:** gravação/leitura/hash; colisão; arquivo truncado; path traversal; MIME divergente; tamanho excedido; reinício do container; negação de execução.
 
 **Critério objetivo de conclusão:** arquivos aceitos permanecem íntegros após recriação dos containers e uploads maliciosos dos casos de teste são rejeitados sem sair da raiz configurada.
+
+**Evidências de conclusão:** porta `StorageProvider` e `LocalStorageProvider` aprovados;
+streaming limitado, SHA-256 e `fsync`; arquivo e sidecar de metadata publicados juntos por
+rename atômico de diretório; UUID/nome interno; leitura revalida tamanho e hash no mesmo
+descritor; colisão não sobrescreve; exclusão física negada sem motivo explícito e referências
+liberadas; PDF/XLSX/XLS/CSV/PNG/JPEG/TIFF validados por extensão, MIME e estrutura mínima;
+ZIP bomb, executável, arquivo truncado, corrupção, tamanho excedido e traversal recusados;
+30 testes unitários M06 e teste automatizado de persistência após recriação do container
+aprovados; suíte completa com PostgreSQL real com 63 testes aprovados e 2 skips condicionais;
+Ruff, mypy, ESLint, TypeScript, build Docker, Alembic sem drift e health aprovados.
 
 ### M07 — Catálogo e API de tarifários
 

@@ -2,15 +2,16 @@
 
 **Atualizado em:** 2026-08-16
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** fundação executável, segura e persistente concluída até M05
+**Fase atual:** fundação executável, segura e persistente concluída até M06
 **Macroetapa atual:** B — Fundação executável, segura e persistente
-**Milestone atual:** nenhum em execução; M05 validado e concluído, M06 desbloqueado
+**Milestone atual:** nenhum em execução; M06 validado e concluído, M07 desbloqueado e não iniciado
 
 ## Resumo executivo
 
-M00–M05 estão concluídos. A aplicação agora possui primeiro acesso protegido, usuários
-`ADMIN`/`OPERATOR`/`VIEWER`, senhas Argon2id, sessões server-side revogáveis, cookie seguro,
-logout, proteção de origem e autorização reutilizável de rotas sobre PostgreSQL real.
+M00–M06 estão concluídos. Além da autenticação/RBAC, a aplicação agora possui porta de
+storage substituível e adapter local imutável, atômico e persistente, com nomes internos,
+SHA-256, metadata, leitura verificada, exclusão física controlada e validação segura dos
+formatos documentais aprovados.
 
 Nenhuma regra de negócio, entidade futura, integração ou job foi antecipado.
 O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis permanecem no M09.
@@ -23,8 +24,9 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - **M03 — Configuração, segredos e setup multiplataforma:** concluído em 2026-08-16.
 - **M04 — Persistência, migrations e transações:** concluído em 2026-08-16.
 - **M05 — Autenticação, RBAC e primeiro administrador:** concluído em 2026-08-16.
+- **M06 — Storage local imutável e uploads seguros:** concluído em 2026-08-16.
 
-## Estrutura entregue até M04
+## Estrutura entregue até M06
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -60,11 +62,18 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   sob HTTPS e proteção de origem;
 - dependências reutilizáveis de autenticação e matriz RBAC;
 - telas React de bootstrap, login, sessão autenticada e logout.
+- porta `StorageProvider`, metadata imutável e adapter `LocalStorageProvider`;
+- streaming com limite, SHA-256, `fsync` e publicação atômica do blob+sidecar;
+- nomes internos UUID, integridade revalidada em leitura e colisões sem overwrite;
+- validação de nome/extensão/MIME/conteúdo/tamanho para PDF/XLSX/XLS/CSV/PNG/JPEG/TIFF;
+- bloqueio de traversal, conteúdo truncado/divergente, ZIP bomb e executáveis;
+- exclusão física negada por padrão e liberada somente com motivo/referências verificadas;
+- persistência comprovada no bind mount após recriação real do container `app`.
 
 ## Trabalho não iniciado
 
-- M06–M26;
-- storage, tarifários e interfaces de produto;
+- M07–M26;
+- tarifários e interfaces de produto;
 - IMAP, OpenAI e demais integrações;
 - regras financeiras, auditoria, relatórios e golden cases.
 
@@ -83,7 +92,7 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   `622581af718d73898438372bcc41e1a0c16f4906`;
 - commit técnico de conclusão do M05 presente localmente e em `origin/main`:
   `fa78c0b47530c659af3f388768cdea3c8b46e737`;
-- divergência local/remoto após o push do M05: `0` à frente, `0` atrás;
+- commit técnico de M06 será registrado nesta seção imediatamente após o push;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -160,21 +169,27 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   milestone de setup;
 - migration atual: `20260816_0002 (head)`; `alembic check`: **PASS**, sem drift;
 - build Docker e frontend: **PASS**; `app`, `worker` e `postgres`: **healthy**.
+- storage M06: **PASS**, 30 testes unitários de integridade, atomicidade, colisão,
+  truncamento/corrupção, traversal, MIME/extensão/conteúdo, limite, ZIP bomb, não execução e
+  exclusão controlada;
+- persistência após recriação real do container `app`: **PASS**, arquivo sintético verificado
+  e removido ao final;
+- suíte completa com PostgreSQL real: **PASS**, 63 testes e 2 skips condicionais esperados;
+- Ruff/format/mypy/ESLint/TypeScript: **PASS**; Docker build e três health checks: **PASS**;
+- Alembic permanece em `20260816_0002 (head)` e sem drift; M06 não exige schema novo.
 
 ## Bloqueios, riscos e findings
 
-Nenhum bloqueio técnico ou finding aberto para iniciar M06. Dependências externas futuras
-continuam documentadas no plano e não afetam M06.
+Nenhum bloqueio técnico ou finding aberto. M07 está tecnicamente desbloqueado, mas não foi
+iniciado neste chat conforme instrução explícita.
 
-`CODE_REVIEW.md` permanece sem findings. ADR-009 foi concretizada com digest de sessão,
-SameSite Strict, validação de origem e serialização do bootstrap.
+`CODE_REVIEW.md` permanece sem findings. ADR-004 foi concretizada com publicação atômica de
+diretório, sidecar mínimo, verificação em leitura e autorização explícita para exclusão.
 
 ## Último commit estável
 
-`fa78c0b47530c659af3f388768cdea3c8b46e737` — `feat: secure M05 authentication and RBAC`
-
-Este commit contém a implementação, os testes, os gates e a memória de conclusão do M05.
+O hash técnico do M06 será registrado imediatamente após a criação e o push do checkpoint.
 
 ## Próxima ação recomendada
 
-Iniciar somente M06 — Storage local imutável e uploads seguros.
+Em uma nova execução autorizada, iniciar M07 — Catálogo e API de tarifários.

@@ -37,7 +37,7 @@ Somente decisões arquiteturais relevantes são registradas aqui. A arquitetura 
 **Status:** ACCEPTED
 **Contexto:** e-mails, anexos, tarifários e relatórios devem ser imutáveis, persistentes e migráveis entre Windows e Linux.
 
-**Decisão:** `LocalStorageProvider` grava blobs atomicamente em `data/` com nome interno, SHA-256, tamanho e metadata no PostgreSQL. Alterações criam nova versão; soft delete altera visibilidade, não remove o blob referenciado. Exclusão física exige fluxo administrativo explícito e bloqueio de referências.
+**Decisão:** `LocalStorageProvider` grava cada blob e seu sidecar mínimo de integridade em um diretório temporário no mesmo filesystem e publica o conjunto por rename atômico em `data/`, com UUID/nome interno, SHA-256, tamanho e metadata posteriormente referenciável no PostgreSQL. A leitura revalida tamanho e hash antes de entregar o mesmo descritor. Alterações criam nova versão; soft delete altera visibilidade no banco, não remove o blob referenciado. Exclusão física é negada por padrão e exige motivo explícito e confirmação de que referências foram verificadas.
 
 **Consequências:** integridade e rastreabilidade são verificáveis; backup precisa manter consistência entre banco e filesystem; cresce o uso de disco, administrado por retenção apenas de temporários/backups, nunca de originais.
 

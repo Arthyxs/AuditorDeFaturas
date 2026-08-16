@@ -28,12 +28,14 @@ def test_valid_settings_are_typed() -> None:
         app_env="development",
         imap_ssl="false",
         email_process_batch_size="75",
+        upload_max_size_bytes="1048576",
         audit_absolute_tolerance="0.005",
     )
 
     assert settings.app_env is AppEnvironment.DEVELOPMENT
     assert settings.imap_ssl is False
     assert settings.email_process_batch_size == 75
+    assert settings.upload_max_size_bytes == 1048576
     assert settings.audit_absolute_tolerance == Decimal("0.005")
 
 
@@ -51,6 +53,7 @@ def test_valid_settings_are_typed() -> None:
         ("imap_port", "70000"),
         ("email_check_interval_minutes", "0"),
         ("backup_retention_days", "0"),
+        ("upload_max_size_bytes", "0"),
     ],
 )
 def test_invalid_configuration_is_rejected(key: str, value: str) -> None:
