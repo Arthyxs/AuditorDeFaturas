@@ -65,7 +65,9 @@ duráveis permanecem no M09.
   `5609f919b967b163dd9c495a5b8c9e55779f7395`;
 - commit técnico de conclusão do M02 presente localmente e em `origin/main`:
   `1c9c4adf2feeb2b88a653b0a89899f184efe1043`;
-- commit técnico de M03 será registrado nesta seção imediatamente após o push;
+- commit técnico de conclusão do M03 presente localmente e em `origin/main`:
+  `53d5196a9a24862aa4130ead2536caf48d0d79b1`;
+- divergência local/remoto após o push do M03: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -133,7 +135,9 @@ concretizou a especificação e ADR-015 sem introduzir nova decisão arquitetura
 
 ## Último commit estável
 
-O hash técnico do M03 será registrado imediatamente após a criação e o push do checkpoint.
+`53d5196a9a24862aa4130ead2536caf48d0d79b1` — `feat: establish secure M03 configuration`
+
+Este commit contém a implementação, os testes, os gates e a memória de conclusão do M03.
 
 ## Próxima ação recomendada
 
