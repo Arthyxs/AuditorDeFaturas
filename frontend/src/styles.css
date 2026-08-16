@@ -55,3 +55,41 @@ h1 {
   font-size: 1.05rem;
   line-height: 1.7;
 }
+
+form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+  color: #34425a;
+  font-weight: 650;
+}
+
+input {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #b9c4d6;
+  border-radius: 0.65rem;
+  font: inherit;
+}
+
+button {
+  width: fit-content;
+  padding: 0.75rem 1.1rem;
+  border: 0;
+  border-radius: 0.65rem;
+  color: white;
+  background: #3158c9;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.error {
+  margin: 0;
+  color: #a02020;
+}

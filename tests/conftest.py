@@ -4,6 +4,9 @@ import os
 
 os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("APP_SECRET_KEY", "test-app-secret-key-000000000000000000000000")
+os.environ.setdefault(
+    "FIRST_ADMIN_BOOTSTRAP_TOKEN", "test-bootstrap-token-000000000000000000000000"
+)
 os.environ.setdefault("POSTGRES_PASSWORD", "test-postgres-password-000000000000000000000")
 os.environ.setdefault(
     "DATABASE_URL",

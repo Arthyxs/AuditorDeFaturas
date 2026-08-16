@@ -89,6 +89,11 @@ if [[ -z "$app_secret" || "$app_secret" == CHANGE_ME ]]; then
     set_env_value APP_SECRET_KEY "$(new_internal_secret)"
 fi
 
+bootstrap_token="$(get_env_value FIRST_ADMIN_BOOTSTRAP_TOKEN)"
+if [[ -z "$bootstrap_token" || "$bootstrap_token" == CHANGE_ME ]]; then
+    set_env_value FIRST_ADMIN_BOOTSTRAP_TOKEN "$(new_internal_secret)"
+fi
+
 postgres_password="$(get_env_value POSTGRES_PASSWORD)"
 if [[ -z "$postgres_password" || "$postgres_password" == CHANGE_ME ]]; then
     postgres_password="$(new_internal_secret)"

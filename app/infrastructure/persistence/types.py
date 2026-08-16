@@ -17,14 +17,16 @@ def enum_values(enum_class: type[PersistedEnum]) -> list[str]:
     return [member.value for member in enum_class]
 
 
-def string_enum_type(enum_class: type[PersistedEnum], *, name: str) -> SqlEnum:
+def string_enum_type(
+    enum_class: type[PersistedEnum], *, name: str, create_constraint: bool = True
+) -> SqlEnum:
     """Build a portable string enum with validation and an explicit constraint."""
     longest_value = max(len(member.value) for member in enum_class)
     return SqlEnum(
         enum_class,
         name=name,
         native_enum=False,
-        create_constraint=True,
+        create_constraint=create_constraint,
         validate_strings=True,
         values_callable=enum_values,
         length=longest_value,

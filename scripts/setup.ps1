@@ -85,6 +85,11 @@ if ([string]::IsNullOrWhiteSpace($appSecret) -or $appSecret -eq 'CHANGE_ME') {
     Set-EnvValue -Path $EnvironmentFile -Name 'APP_SECRET_KEY' -Value (New-InternalSecret)
 }
 
+$bootstrapToken = Get-EnvValue -Path $EnvironmentFile -Name 'FIRST_ADMIN_BOOTSTRAP_TOKEN'
+if ([string]::IsNullOrWhiteSpace($bootstrapToken) -or $bootstrapToken -eq 'CHANGE_ME') {
+    Set-EnvValue -Path $EnvironmentFile -Name 'FIRST_ADMIN_BOOTSTRAP_TOKEN' -Value (New-InternalSecret)
+}
+
 $postgresPassword = Get-EnvValue -Path $EnvironmentFile -Name 'POSTGRES_PASSWORD'
 if ([string]::IsNullOrWhiteSpace($postgresPassword) -or $postgresPassword -eq 'CHANGE_ME') {
     $postgresPassword = New-InternalSecret

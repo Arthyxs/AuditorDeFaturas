@@ -44,7 +44,8 @@ usa volume nomeado e os diretórios operacionais usam bind mounts sob `data/`, q
 ignorado pelo Git.
 
 As configurações são validadas antes do processo iniciar. `APP_SECRET_KEY`,
-`POSTGRES_PASSWORD` e `DATABASE_URL` são obrigatórios; placeholders, segredos internos
+`FIRST_ADMIN_BOOTSTRAP_TOKEN`, `POSTGRES_PASSWORD` e `DATABASE_URL` são obrigatórios;
+placeholders, segredos internos
 curtos, timezone desconhecido e URL de banco fora de `postgresql+psycopg` são rejeitados.
 Representações e resumos operacionais mantêm valores secretos redigidos.
 
@@ -62,6 +63,18 @@ A fundação usa UUID gerado pela aplicação, timestamps com timezone apresenta
 pela sessão do banco, JSONB, enums de string com constraints nomeadas e `Decimal` mapeado
 por padrão para `NUMERIC(20,6)`. A revisão inicial estabelece a linhagem Alembic; tabelas de
 produto serão adicionadas somente nos milestones responsáveis por seus invariantes.
+
+## Primeiro acesso e autenticação
+
+O setup gera e preserva em `.env` o token secreto `FIRST_ADMIN_BOOTSTRAP_TOKEN`. No
+primeiro acesso, a interface solicita esse token, um usuário e uma senha de pelo menos 12
+caracteres. O fluxo cria um único `ADMIN`; depois disso ele permanece fechado, inclusive
+para tentativas concorrentes. Não há credenciais de produção predefinidas.
+
+Senhas usam Argon2id. Sessões ficam no PostgreSQL com token opaco armazenado no navegador
+por cookie HTTPOnly, SameSite Strict e Secure quando `APP_BASE_URL` usa HTTPS; o banco
+guarda somente o SHA-256 do token. Logout revoga a sessão no servidor. Rotas podem exigir
+`ADMIN`, `OPERATOR` ou `VIEWER`, e mutações autenticadas validam a origem configurada.
 
 ## Backend
 
@@ -100,6 +113,6 @@ O build de produção é gerado em `frontend/dist/`, diretório ignorado pelo Gi
 
 ## Limites atuais
 
-Esta etapa não expõe APIs de produto, autenticação, modelos/migrations, jobs duráveis,
-integrações ou regras de auditoria. O worker do M02 publica somente o heartbeat de processo
+Esta etapa não expõe APIs de tarifários, faturas ou auditoria, jobs duráveis, integrações ou
+regras de auditoria. O worker do M02 publica somente o heartbeat de processo
 necessário para validar o runtime; scheduling e jobs começam nos milestones próprios.

@@ -82,7 +82,7 @@ Somente decisões arquiteturais relevantes são registradas aqui. A arquitetura 
 **Status:** ACCEPTED
 **Contexto:** o primeiro acesso deve criar admin, e a aplicação local/VPS precisa de autenticação simples sem expor tokens ao JavaScript.
 
-**Decisão:** autenticar por sessão opaca armazenada no PostgreSQL e cookie HTTPOnly, Secure em HTTPS e SameSite. O setup gera um token de bootstrap de uso único para criar o primeiro `ADMIN`; depois ele é invalidado e o endpoint fecha.
+**Decisão:** autenticar por sessão opaca armazenada no PostgreSQL e cookie HTTPOnly, Secure em HTTPS e SameSite Strict. Somente o SHA-256 do token de sessão é persistido e mutações autenticadas exigem origem exatamente igual a `APP_BASE_URL`. O setup gera um token de bootstrap de uso único para criar o primeiro `ADMIN`; um advisory lock transacional serializa tentativas concorrentes e, após existir um `ADMIN`, o endpoint fecha permanentemente para esse fluxo.
 
 **Consequências:** revogação e RBAC são simples; exige tabela/limpeza de sessões, proteção CSRF e configuração correta de proxy/HTTPS; evita JWT persistido no browser.
 

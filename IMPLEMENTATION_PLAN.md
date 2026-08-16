@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M04 concluídos; M05 desbloqueado e não iniciado
+**Estado:** FECHADO E APROVADO — M00–M05 concluídos; M06 desbloqueado e não iniciado
 **Atualizado em:** 2026-08-16
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -396,6 +396,8 @@ mypy, ESLint, TypeScript, build Docker sem cache e health dos três serviços ap
 
 ### M05 — Autenticação, RBAC e primeiro administrador
 
+**Status:** COMPLETED — concluído em 2026-08-16; M06 desbloqueado, não iniciado.
+
 **Objetivo:** proteger o produto desde o primeiro acesso.
 
 **Funcionalidades:** usuários `ADMIN`/`OPERATOR`/`VIEWER`; hash Argon2id; sessão server-side; cookie HTTPOnly/SameSite; logout; bootstrap único do primeiro admin; autorização de rotas.
@@ -407,6 +409,15 @@ mypy, ESLint, TypeScript, build Docker sem cache e health dos três serviços ap
 **Testes necessários:** hash/verificação; expiração e revogação; CSRF conforme estratégia; matriz RBAC; bootstrap concorrente; impossibilidade de criar segundo admin pelo fluxo inicial.
 
 **Critério objetivo de conclusão:** primeiro admin é criado uma única vez de forma protegida; cada papel acessa somente ações permitidas; testes de segurança e sessão passam.
+
+**Evidências de conclusão:** token de bootstrap criptograficamente aleatório gerado/preservado
+pelos scripts de setup e nunca exposto pela API; criação concorrente serializada por advisory
+lock transacional; segundo `ADMIN` recusado pelo fluxo inicial; hashes Argon2id; tokens de
+sessão opacos com somente SHA-256 persistido; expiração, revogação e logout aprovados;
+cookie HTTPOnly/Secure sob HTTPS/SameSite Strict; validação de origem em mutações; matriz
+`ADMIN`/`OPERATOR`/`VIEWER` aprovada; migration `20260816_0002`, Alembic sem drift, suíte
+PostgreSQL com 32 testes aprovados e 1 skip condicional Linux já coberto anteriormente;
+Ruff, mypy estrito, ESLint, TypeScript, build Docker e health dos três serviços aprovados.
 
 ### M06 — Storage local imutável e uploads seguros
 

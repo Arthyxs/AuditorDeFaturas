@@ -2,18 +2,17 @@
 
 **Atualizado em:** 2026-08-16
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** fundação executável, segura e persistente concluída até M04
+**Fase atual:** fundação executável, segura e persistente concluída até M05
 **Macroetapa atual:** B — Fundação executável, segura e persistente
-**Milestone atual:** nenhum em execução; M04 validado e concluído, M05 desbloqueado
+**Milestone atual:** nenhum em execução; M05 validado e concluído, M06 desbloqueado
 
 ## Resumo executivo
 
-M00–M04 estão concluídos. O runtime/configuração agora possui fundação PostgreSQL real com
-SQLAlchemy 2, psycopg, Alembic, sessões transacionais, repository e unit of work. As
-convenções de UUID, UTC, JSONB, enums nomeados e `NUMERIC(20,6)` foram provadas em bancos
-PostgreSQL descartáveis, sem antecipar tabelas de produto.
+M00–M05 estão concluídos. A aplicação agora possui primeiro acesso protegido, usuários
+`ADMIN`/`OPERATOR`/`VIEWER`, senhas Argon2id, sessões server-side revogáveis, cookie seguro,
+logout, proteção de origem e autorização reutilizável de rotas sobre PostgreSQL real.
 
-Nenhuma regra de negócio, entidade futura, integração, autenticação ou job foi antecipado.
+Nenhuma regra de negócio, entidade futura, integração ou job foi antecipado.
 O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis permanecem no M09.
 
 ## Milestones concluídos
@@ -23,6 +22,7 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - **M02 — Runtime Docker Compose e PostgreSQL:** concluído em 2026-08-16.
 - **M03 — Configuração, segredos e setup multiplataforma:** concluído em 2026-08-16.
 - **M04 — Persistência, migrations e transações:** concluído em 2026-08-16.
+- **M05 — Autenticação, RBAC e primeiro administrador:** concluído em 2026-08-16.
 
 ## Estrutura entregue até M04
 
@@ -53,11 +53,18 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - Alembic e baseline `20260816_0001`, sem tabelas futuras simuladas;
 - setup Windows/Linux executando `alembic upgrade head` após o startup;
 - override Compose de teste expondo PostgreSQL somente em `127.0.0.1:55432`.
+- modelos `users`/`sessions` e migration `20260816_0002` reversível;
+- senha Argon2id e sessão opaca com somente digest SHA-256 persistido;
+- bootstrap único e concorrente protegido por token gerado pelo setup e advisory lock;
+- login, identidade, logout, expiração/revogação, cookie HTTPOnly/SameSite Strict/Secure
+  sob HTTPS e proteção de origem;
+- dependências reutilizáveis de autenticação e matriz RBAC;
+- telas React de bootstrap, login, sessão autenticada e logout.
 
 ## Trabalho não iniciado
 
-- M05–M26;
-- autenticação, storage, tarifários e interfaces de produto;
+- M06–M26;
+- storage, tarifários e interfaces de produto;
 - IMAP, OpenAI e demais integrações;
 - regras financeiras, auditoria, relatórios e golden cases.
 
@@ -74,7 +81,7 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   `53d5196a9a24862aa4130ead2536caf48d0d79b1`;
 - commit técnico de conclusão do M04 presente localmente e em `origin/main`:
   `622581af718d73898438372bcc41e1a0c16f4906`;
-- divergência local/remoto após o push do M04: `0` à frente, `0` atrás;
+- commit técnico de M05 será registrado nesta seção imediatamente após o push;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -144,21 +151,26 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - configuração válida/inválida e segredo ausente: **PASS**;
 - idempotência/paths/logs de setup: **PASS** Windows e Linux;
 - migrations: **PASS**, head aplicado, downgrade/upgrade e drift check aprovados.
+- segurança M05 em PostgreSQL real: **PASS**, hash/verificação Argon2id, bootstrap
+  concorrente, bloqueio do segundo admin, expiração, revogação, logout, CSRF/origin,
+  cookies e matriz RBAC;
+- suíte com PostgreSQL real: **PASS**, 32 testes e 1 skip Linux condicional já coberto no
+  milestone de setup;
+- migration atual: `20260816_0002 (head)`; `alembic check`: **PASS**, sem drift;
+- build Docker e frontend: **PASS**; `app`, `worker` e `postgres`: **healthy**.
 
 ## Bloqueios, riscos e findings
 
-Nenhum bloqueio técnico ou finding aberto para iniciar M05. Dependências externas futuras
-continuam documentadas no plano e não afetam M05.
+Nenhum bloqueio técnico ou finding aberto para iniciar M06. Dependências externas futuras
+continuam documentadas no plano e não afetam M06.
 
-`CODE_REVIEW.md` permanece sem findings. `DECISIONS.md` recebeu ADR-017 com as convenções
-de persistência efetivamente testadas no M04.
+`CODE_REVIEW.md` permanece sem findings. ADR-009 foi concretizada com digest de sessão,
+SameSite Strict, validação de origem e serialização do bootstrap.
 
 ## Último commit estável
 
-`622581af718d73898438372bcc41e1a0c16f4906` — `feat: establish M04 persistence foundation`
-
-Este commit contém a implementação, os testes, os gates e a memória de conclusão do M04.
+O hash técnico do M05 será registrado imediatamente após a criação e o push do checkpoint.
 
 ## Próxima ação recomendada
 
-Iniciar somente M05 — Autenticação, bootstrap e RBAC.
+Iniciar somente M06 — Storage local imutável e uploads seguros.

@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     app_base_url: AnyHttpUrl = AnyHttpUrl("http://localhost:8000")
     app_timezone: str = "America/Sao_Paulo"
     app_secret_key: SecretStr
+    first_admin_bootstrap_token: SecretStr
+    session_lifetime_minutes: int = Field(default=480, ge=5, le=10080)
 
     postgres_db: str = "invoice_auditor"
     postgres_user: str = "invoice_auditor"
@@ -76,7 +78,7 @@ class Settings(BaseSettings):
     backup_enabled: bool = True
     backup_retention_days: int = Field(default=30, ge=1)
 
-    @field_validator("app_secret_key", "postgres_password")
+    @field_validator("app_secret_key", "postgres_password", "first_admin_bootstrap_token")
     @classmethod
     def validate_internal_secret(cls, value: SecretStr) -> SecretStr:
         """Reject missing, placeholder or weak internal secrets."""
@@ -114,6 +116,7 @@ class Settings(BaseSettings):
             "app_env": self.app_env.value,
             "app_base_url": str(self.app_base_url),
             "app_timezone": self.app_timezone,
+            "session_lifetime_minutes": self.session_lifetime_minutes,
             "postgres_db": self.postgres_db,
             "postgres_user": self.postgres_user,
             "database_configured": bool(self.database_url.get_secret_value()),

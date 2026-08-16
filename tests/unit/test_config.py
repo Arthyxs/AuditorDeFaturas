@@ -10,6 +10,7 @@ from app.config import AppEnvironment, Settings
 VALID_SETTINGS = {
     "app_env": "test",
     "app_secret_key": "app-secret-00000000000000000000000000000000",
+    "first_admin_bootstrap_token": "bootstrap-secret-0000000000000000000000000000",
     "postgres_password": "postgres-secret-000000000000000000000000000",
     "database_url": "postgresql+psycopg://invoice_auditor:secret@postgres:5432/invoice_auditor",
 }
@@ -43,6 +44,7 @@ def test_valid_settings_are_typed() -> None:
         ("app_timezone", "Not/A_Timezone"),
         ("app_secret_key", "short"),
         ("app_secret_key", "CHANGE_ME"),
+        ("first_admin_bootstrap_token", "short"),
         ("postgres_password", "short"),
         ("database_url", "sqlite:///invoice-auditor.db"),
         ("database_url", "postgresql+psycopg://user:CHANGE_ME@postgres/db"),
@@ -57,7 +59,10 @@ def test_invalid_configuration_is_rejected(key: str, value: str) -> None:
         build_settings(**{key: value})
 
 
-@pytest.mark.parametrize("missing_key", ["app_secret_key", "postgres_password", "database_url"])
+@pytest.mark.parametrize(
+    "missing_key",
+    ["app_secret_key", "first_admin_bootstrap_token", "postgres_password", "database_url"],
+)
 def test_required_internal_configuration_cannot_be_absent(missing_key: str) -> None:
     """Internal secrets and the database URL are mandatory."""
     values = {**VALID_SETTINGS, missing_key: ""}
@@ -74,6 +79,7 @@ def test_secret_values_are_redacted_from_representations_and_summary() -> None:
 
     for secret in (
         VALID_SETTINGS["app_secret_key"],
+        VALID_SETTINGS["first_admin_bootstrap_token"],
         VALID_SETTINGS["postgres_password"],
         VALID_SETTINGS["database_url"],
     ):
