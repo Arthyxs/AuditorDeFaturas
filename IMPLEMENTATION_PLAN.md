@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00 e M01 concluídos; M02 desbloqueado e não iniciado
+**Estado:** FECHADO E APROVADO — M00–M02 concluídos; M03 desbloqueado e não iniciado
 **Atualizado em:** 2026-08-16
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -312,6 +312,8 @@ Além do critério específico de cada milestone, sua conclusão exige, quando a
 
 ### M02 — Runtime Docker Compose e PostgreSQL
 
+**Status:** COMPLETED — concluído em 2026-08-16; M03 desbloqueado.
+
 **Objetivo:** estabelecer o runtime canônico e portável.
 
 **Funcionalidades:** imagem compartilhada para `app`/`worker`, serviço PostgreSQL, volumes persistentes, health checks e endpoint básico de liveness.
@@ -323,6 +325,14 @@ Além do critério específico de cada milestone, sua conclusão exige, quando a
 **Testes necessários:** build limpo; `docker compose up`; health dos três serviços; reinício sem perda do volume PostgreSQL; execução em paths Windows.
 
 **Critério objetivo de conclusão:** Compose sobe `app`, `worker` e `postgres` saudáveis e os dados de smoke sobrevivem à recriação dos containers.
+
+**Evidências de conclusão:** build multi-stage limpo aprovado com frontend Vite e backend
+Python 3.12; imagem compartilhada executada como `app` e `worker`; PostgreSQL 17 com volume
+nomeado; bind mounts resolvidos corretamente a partir do path Windows do repositório; os
+três serviços atingiram `healthy`; `/api/health/live` respondeu `200` com payload esperado;
+marker gravado em tabela de smoke permaneceu após `docker compose down` e recriação completa
+dos containers, sendo removido após a prova; 4 testes Python, Ruff lint/format, mypy estrito,
+ESLint e TypeScript passaram. Nenhuma migration ou funcionalidade futura foi antecipada.
 
 ### M03 — Configuração, segredos e setup multiplataforma
 

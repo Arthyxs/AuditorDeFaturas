@@ -1,0 +1,68 @@
+name: invoice-auditor
+
+x-app-base: &app-base
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: invoice-auditor:local
+  init: true
+  restart: unless-stopped
+  volumes:
+    - ./data/tariffs:/app/data/tariffs
+    - ./data/invoices:/app/data/invoices
+    - ./data/reports:/app/data/reports
+    - ./data/backups:/app/data/backups
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-invoice_auditor}
+      POSTGRES_USER: ${POSTGRES_USER:-invoice_auditor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-invoice_auditor_dev_only}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  app:
+    <<: *app-base
+    command: ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/live', timeout=2).read()"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  worker:
+    <<: *app-base
+    command: ["python", "-m", "app.worker.main"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "app.worker.healthcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres_data:

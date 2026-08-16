@@ -2,26 +2,28 @@
 
 **Atualizado em:** 2026-08-16
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** fundação executável iniciada
+**Fase atual:** fundação de runtime concluída; configuração segura é a próxima etapa
 **Macroetapa atual:** B — Fundação executável, segura e persistente
-**Milestone atual:** nenhum em execução; M01 concluído e M02 desbloqueado, ainda não iniciado
+**Milestone atual:** nenhum em execução; M02 validado e concluído, M03 desbloqueado
 
 ## Resumo executivo
 
-M00 e M01 estão concluídos. O repositório agora contém o esqueleto executável final do
-backend modular em Python/FastAPI e do frontend React/TypeScript/Vite, além dos gates de
-teste, lint, formatação, type check e build previstos para o M01.
+M00–M02 estão concluídos. O runtime canônico agora executa uma imagem multi-stage
+compartilhada pelos processos `app` e `worker`, com PostgreSQL persistente no Docker
+Compose. Os três serviços possuem health checks reais e o processo web expõe somente o
+liveness básico previsto para esta etapa.
 
-Nenhuma regra de negócio, persistência, migration, integração, autenticação, worker
-funcional, endpoint de produto ou runtime Docker do projeto foi antecipado. Esses itens
-permanecem nos milestones próprios, a partir do M02.
+Nenhuma regra de negócio, modelo de persistência, migration, integração, autenticação ou
+job futuro foi antecipado. O worker do M02 mantém apenas o processo e seu heartbeat; jobs
+duráveis permanecem no M09.
 
 ## Milestones concluídos
 
 - **M00 — Aprovação do plano e prontidão do ambiente:** concluído em 2026-08-15.
 - **M01 — Estrutura executável e qualidade básica:** concluído em 2026-08-16.
+- **M02 — Runtime Docker Compose e PostgreSQL:** concluído em 2026-08-16.
 
-## Estrutura entregue no M01
+## Estrutura entregue até M02
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -34,12 +36,15 @@ permanecem nos milestones próprios, a partir do M02.
   `features`, `pages` e `routes`;
 - ESLint, TypeScript type check, build de produção e lockfile npm;
 - `README.md` com requisitos, comandos de desenvolvimento, gates e limites do M01.
+- `Dockerfile` multi-stage com build Vite e runtime Python 3.12 não-root;
+- `docker-compose.yml` com `app`, `worker` e PostgreSQL 17;
+- imagem compartilhada para os dois processos da aplicação;
+- volume nomeado para PostgreSQL e bind mounts persistentes sob `data/`;
+- health checks dos três serviços, endpoint `/api/health/live` e heartbeat do worker.
 
 ## Trabalho não iniciado
 
-- M02–M26;
-- Dockerfile, Docker Compose e PostgreSQL do projeto;
-- endpoint de liveness e processo worker executável;
+- M03–M26;
 - configuração operacional, banco e migrations;
 - autenticação, storage, tarifários e interfaces de produto;
 - IMAP, OpenAI e demais integrações;
@@ -50,9 +55,9 @@ permanecem nos milestones próprios, a partir do M02.
 - branch atual: `main`;
 - upstream: `main` rastreia `origin/main`;
 - remoto: `origin` configurado para `https://github.com/Arthyxs/AuditorDeFaturas.git`;
-- commit técnico de conclusão do M01 presente localmente e em `origin/main`:
+- commit técnico de conclusão do M01 presente em `origin/main`:
   `5609f919b967b163dd9c495a5b8c9e55779f7395`;
-- divergência local/remoto após o push do M01: `0` à frente, `0` atrás;
+- commit técnico de M02 será registrado nesta seção imediatamente após o push;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -67,39 +72,39 @@ permanecem nos milestones próprios, a partir do M02.
 - React 19.2.8, TypeScript 6.0.3 e Vite 8.2.1;
 - ESLint 10.8.1.
 
-### Runtime canônico validado no M00
+### Runtime canônico validado no M02
 
 - WSL2: distribuição padrão `docker-desktop`, versão padrão 2;
 - Docker Client/Engine: 29.7.2;
 - Docker Desktop: 4.86.0, contexto `desktop-linux`, Engine Linux `amd64`;
 - Docker Compose: 5.3.1;
-- `docker run --rm hello-world`: aprovado no M00.
-
-Uma reinspeção dentro da sessão restrita do M01 confirmou o Docker CLI e o Compose, mas
-o acesso ao daemon foi negado pelo sandbox desta sessão. Isso não afeta o M01, que não
-possui build ou serviços Docker; a evidência operacional bloqueante permanece a validação
-concluída no M00.
+- build limpo multi-stage: aprovado;
+- `app`, `worker` e `postgres`: `healthy` após subida inicial e recriação;
+- endpoint HTTP `/api/health/live`: aprovado;
+- path Windows `C:\Users\Arthur\Documents\auditordefaturas` resolvido corretamente pelo Compose;
+- marker PostgreSQL sobreviveu a `docker compose down` e recriação dos containers;
+- tabela descartável de smoke removida após o teste; volume persistente preservado.
 
 ## Status de testes, build e execução
 
-- backend smoke tests: **PASS**, 2 testes;
+- backend/unit tests: **PASS**, 4 testes;
 - Python lint (`ruff check`): **PASS**;
-- Python format check (`ruff format --check`): **PASS**, 43 arquivos formatados;
-- Python type check (`mypy`, modo estrito): **PASS**, 35 arquivos verificados;
+- Python format check (`ruff format --check`): **PASS**, 48 arquivos formatados;
+- Python type check (`mypy`, modo estrito): **PASS**, 40 arquivos verificados;
 - frontend lint (`eslint`): **PASS**;
 - frontend TypeScript type check (`tsc -b`): **PASS**;
-- frontend production build (`vite build`): **PASS**, Vite 8.2.1;
-- backend em modo de desenvolvimento: **PASS**, startup completo e HTTP 200 em `/docs`;
-- frontend em modo de desenvolvimento: **PASS**, startup completo e HTTP 200 na raiz;
+- frontend production build: **PASS** dentro do build Docker limpo, Vite 8.2.1;
+- Compose config: **PASS**;
+- Compose health: **PASS**, três serviços saudáveis;
+- persistência PostgreSQL entre recriações: **PASS**;
 - scan de segredos/artefatos: **PASS**, apenas placeholders `CHANGE_ME` no `.env.example`;
 - artefatos locais `.venv`, caches, `node_modules` e `frontend/dist`: ignorados pelo Git;
-- migrations: não aplicável ao M01; começam no M04;
-- Docker build/Compose do projeto: não aplicável ao M01; começam no M02.
+- migrations: ainda não aplicável; começam no M04.
 
 ## Bloqueios, riscos e findings
 
-Nenhum bloqueio técnico ou finding aberto para iniciar M02. Dependências externas futuras
-continuam documentadas no plano e não afetam o M01.
+Nenhum bloqueio técnico ou finding aberto para iniciar M03. Dependências externas futuras
+continuam documentadas no plano e não afetam M03.
 
 `CODE_REVIEW.md` permanece sem findings. `DECISIONS.md` não foi alterado porque o M01 não
 exigiu nova decisão arquitetural; mypy já era uma escolha prevista pelo plano e foi apenas
@@ -107,11 +112,8 @@ concretizado como ferramenta de qualidade.
 
 ## Último commit estável
 
-`5609f919b967b163dd9c495a5b8c9e55779f7395` — `feat: establish executable M01 skeleton`
-
-Este commit contém a implementação, os gates e a memória de conclusão do M01. O commit
-documental subsequente registra este hash em `PROJECT_STATUS.md`.
+O hash técnico do M02 será registrado imediatamente após a criação e o push do checkpoint.
 
 ## Próxima ação recomendada
 
-Em uma nova sessão autorizada, iniciar somente M02 — Runtime Docker Compose e PostgreSQL.
+Iniciar somente M03 — Configuração, segredos e setup multiplataforma.

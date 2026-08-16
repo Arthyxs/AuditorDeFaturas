@@ -1,14 +1,27 @@
 # InvoiceAuditor
 
-Base executável do auditor de faturas logísticas. O M01 contém somente o esqueleto
-definitivo do backend e do frontend e seus gates de qualidade; regras de negócio,
-persistência, integrações e runtime Docker do projeto pertencem aos próximos milestones.
+Base executável do auditor de faturas logísticas. O runtime canônico usa uma imagem
+compartilhada pelos processos `app` e `worker`, acompanhada de PostgreSQL no Docker
+Compose. Regras de negócio e integrações ainda pertencem aos próximos milestones.
 
 ## Requisitos de desenvolvimento
 
 - Python 3.12 ou superior;
 - Node.js 20.19 ou superior;
 - npm 11 ou compatível.
+- Docker Engine com Docker Compose.
+
+## Runtime canônico
+
+```powershell
+docker compose up -d --build
+docker compose ps
+```
+
+O processo web fica disponível em `http://localhost:8000` e seu liveness em
+`http://localhost:8000/api/health/live`. Os três serviços possuem health checks. O banco
+usa volume nomeado e os diretórios operacionais usam bind mounts sob `data/`, que é
+ignorado pelo Git.
 
 ## Backend
 
@@ -47,5 +60,6 @@ O build de produção é gerado em `frontend/dist/`, diretório ignorado pelo Gi
 
 ## Limites atuais
 
-Esta etapa não expõe APIs de produto, autenticação, persistência, worker, integrações ou
-regras de auditoria. O runtime Docker Compose e o endpoint de liveness começam no M02.
+Esta etapa não expõe APIs de produto, autenticação, modelos/migrations, jobs duráveis,
+integrações ou regras de auditoria. O worker do M02 publica somente o heartbeat de processo
+necessário para validar o runtime; scheduling e jobs começam nos milestones próprios.
