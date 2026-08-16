@@ -127,9 +127,9 @@ Somente decisões arquiteturais relevantes são registradas aqui. A arquitetura 
 **Status:** ACCEPTED
 **Contexto:** homologação e operação precisam aceitar fatura enviada manualmente por `ADMIN`/`OPERATOR`, sem depender de e-mail e sem manter dois motores de auditoria.
 
-**Decisão:** criar `invoice_submissions` como fronteira canônica de entrada. O adapter IMAP/classificador e o endpoint autenticado `POST /api/invoices/manual` produzem submissões com origem, ator, chave idempotente e arquivos imutáveis. Depois dessa fronteira, ambos executam exatamente os mesmos casos de uso e jobs de criação de fatura, seleção de tarifário, interpretação, cálculo, auditoria e relatório. O caminho manual não fabrica e-mail nem executa classificação/movimentação IMAP.
+**Decisão:** criar `invoice_submissions` como fronteira canônica de entrada. O núcleo `InvoiceIntake` e a entrada manual dependem apenas de autenticação, storage e jobs. O adapter IMAP depende adicionalmente da ingestão e classificação de e-mail. O adapter IMAP/classificador e o endpoint autenticado `POST /api/invoices/manual` produzem submissões com origem, ator, chave idempotente e arquivos imutáveis. Depois dessa fronteira, ambos executam exatamente os mesmos casos de uso e jobs de criação de fatura, seleção de tarifário, interpretação, cálculo, auditoria e relatório. O caminho manual não fabrica e-mail nem executa classificação/movimentação IMAP.
 
-**Consequências:** homologação não depende de caixa postal; origem e usuário permanecem rastreáveis; upload manual herda validações de storage/RBAC; testes de contrato devem provar equivalência de comandos downstream entre as duas origens.
+**Consequências:** homologação e entrada manual permanecem tecnicamente independentes da conclusão do fluxo IMAP; origem e usuário permanecem rastreáveis; upload manual herda validações de storage/RBAC; testes de contrato devem provar equivalência de comandos downstream entre as duas origens.
 
 ## ADR-015 — WSL2 é requisito ambiental, não dependência arquitetural
 
@@ -145,6 +145,6 @@ Somente decisões arquiteturais relevantes são registradas aqui. A arquitetura 
 **Status:** ACCEPTED
 **Contexto:** o objetivo principal é não aprovar cobrança incorreta, e uma avaliação única sem ground truth não demonstra qualidade do auditor.
 
-**Decisão:** manter conjunto de referência versionado com pelo menos quatro casos simples, quatro médios, quatro difíceis e quatro muito difíceis, com ground truth por documento e possibilidade de extensão privada por documentos reais anonimizados. Medir document accuracy, false positive rate, false negative rate e pending rate no agregado e por dificuldade/origem/formato/modelo. Documento realmente `INCORRECT` classificado `CORRECT` é falso negativo, gera finding `CRITICAL` e bloqueia milestone/release; o gate de homologação exige false negative rate de `0%`.
+**Decisão:** manter conjunto de referência versionado com pelo menos quatro casos simples, quatro médios, quatro difíceis e quatro muito difíceis, com ground truth por documento e possibilidade de extensão privada por documentos reais anonimizados. Medir document accuracy, false positive rate, false negative rate e pending rate no agregado e por dificuldade/origem/formato/modelo. Documento realmente `INCORRECT` classificado `CORRECT` é falso negativo, gera finding `CRITICAL` e bloqueia milestone/release; o gate exige zero falsos negativos observados no conjunto versionado efetivamente executado. Esse resultado é evidência empírica restrita à matriz/execuções e não uma garantia estatística de taxa zero sobre dados de produção ainda não vistos.
 
 **Consequências:** qualidade passa a ser mensurável e comparável entre prompts/modelos; golden cases e resultados precisam de versão; homologação real tem custo e repetição, mas nenhum ganho agregado pode mascarar falso negativo.

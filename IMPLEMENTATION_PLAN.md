@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** APROVADO — M00 concluído; M01 aguarda autorização explícita
+**Estado:** FECHADO E APROVADO — M00 concluído; M01 aguarda autorização explícita
 **Atualizado em:** 2026-08-15
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -259,6 +259,8 @@ Qualidade mínima para aceite do release:
 
 Durante desenvolvimento, uma execução completa por revisão relevante é suficiente. No gate final de M26, cada caso com integração real deve ser repetido três vezes para medir estabilidade; todas as execuções entram nas métricas.
 
+O gate de false negative rate igual a `0%` significa **zero falsos negativos observados no conjunto de homologação versionado efetivamente executado**. É um critério empírico de aceite dessa matriz e dessas execuções; não constitui garantia estatística de taxa zero sobre documentos de produção futuros, distribuições ainda não vistas ou formatos fora do conjunto avaliado. Casos de produção devem alimentar monitoramento contínuo e, quando anonimizados/permitidos, ampliar novas versões do conjunto de referência.
+
 ## 6. Regras globais de conclusão
 
 Além do critério específico de cada milestone, sua conclusão exige, quando aplicável:
@@ -482,7 +484,18 @@ Além do critério específico de cada milestone, sua conclusão exige, quando a
 
 **Principais componentes:** `invoice_submissions`, `submission_files`, serviço `InvoiceIntake`, rota manual, `partners`, `invoices`, `invoice_documents`, `document_charge_items` e schemas de origem/evidência.
 
-**Dependências:** M05, M06, M09, M11 e M13.
+**Grafo de dependências internas:**
+
+```text
+M05 auth ─────┐
+M06 storage ──┼→ InvoiceIntake + entrada MANUAL
+M09 jobs ─────┘
+
+M11 ingestão de e-mail ─┐
+M13 classificação ──────┴→ adapter de entrada IMAP → InvoiceIntake
+```
+
+**Dependências:** o núcleo `InvoiceIntake` e a entrada `MANUAL` dependem somente de M05, M06 e M09. A entrada `IMAP` depende adicionalmente de M11 e M13. M14 conserva sua posição atual depois de M13 para rastreabilidade do plano, mas a capacidade manual não possui dependência técnica da conclusão da classificação IMAP.
 
 **Testes necessários:** RBAC do endpoint; upload multipart seguro; idempotência por chave/hash; parceiro conhecido/desconhecido; campos ausentes; moedas/decimais; centenas de documentos sintéticos; constraint de origem; comparação provando que submissões IMAP e manual equivalentes geram o mesmo comando/job downstream sem duplicação de serviço.
 
@@ -556,7 +569,7 @@ Além do critério específico de cada milestone, sua conclusão exige, quando a
 
 **Testes necessários:** quatro ou mais casos simples, médios, difíceis e muito difíceis; entradas IMAP/manual; PDF/planilha/imagem; ausência de dado; regra ambígua; múltiplos tarifários; divergência por componente; prompt injection em documento; resposta truncada; cálculo de document accuracy, false positive rate, false negative rate e pending rate; teste real controlado Terra.
 
-**Critério objetivo de conclusão:** o baseline versionado cumpre os gates da seção 5.2, incluindo zero falso negativo; todos os casos aprovados demonstram documento, cobrado, esperado, diferença, regra, tarifário, evidência, entradas e cálculo; cada run fornece novamente os originais e nunca usa interpretação histórica como entrada autoritativa.
+**Critério objetivo de conclusão:** o baseline versionado executado cumpre os gates da seção 5.2, incluindo zero falso negativo observado nessa matriz; todos os casos aprovados demonstram documento, cobrado, esperado, diferença, regra, tarifário, evidência, entradas e cálculo; cada run fornece novamente os originais e nunca usa interpretação histórica como entrada autoritativa.
 
 ### M20 — Consolidação, inconsistências e relatórios imutáveis
 
@@ -654,7 +667,7 @@ Além do critério específico de cada milestone, sua conclusão exige, quando a
 
 **Testes necessários:** suíte completa; lint/types; Docker build; Compose; migrations; e2e incluindo auditoria manual; golden cases repetidos três vezes; métricas por dificuldade/origem/formato/modelo; restore; instalação limpa; segurança de upload/auth/logs; carga representativa de ~100 faturas/mês.
 
-**Critério objetivo de conclusão:** os 24 critérios de aceite da seção 63, os 14 passos do critério de sucesso da seção 88 e o fluxo adicional de auditoria manual têm evidência de teste/documentação; false negative rate é `0%` no gate repetido; não há finding crítico/alto aberto; commit final está no remoto e registrado.
+**Critério objetivo de conclusão:** os 24 critérios de aceite da seção 63, os 14 passos do critério de sucesso da seção 88 e o fluxo adicional de auditoria manual têm evidência de teste/documentação; nenhum falso negativo é observado no conjunto versionado durante o gate repetido; não há finding crítico/alto aberto; commit final está no remoto e registrado. Esse resultado não é declarado como garantia estatística sobre dados de produção não vistos.
 
 ## 8. Dependências externas e stop conditions
 
