@@ -73,7 +73,7 @@ classificação por chave idempotente. Testes usam somente provider fake/mock.
 - **M12 — Fundação do provider de IA e telemetria:** concluído em 2026-08-17;
   `36b72678494c056772d7e2a351d1cd93226d194a`.
 - **M13 — Classificação, revisão e movimentação de e-mails:** concluído em 2026-08-17;
-  commit técnico pendente de registro após criação do checkpoint.
+  `1097ec90e8c1ad145daf0564180cd326d75bab7d`.
 
 ## Estrutura entregue até M13
 
@@ -201,6 +201,8 @@ classificação por chave idempotente. Testes usam somente provider fake/mock.
   `b7b82f98645fabefc09648463e43f2c63f3a514c`;
 - commit técnico da remediação REVIEW-006/008/012–015 presente localmente e em `origin/main`:
   `02aa13d1532cefe55c83ddb30db97988792257ad`;
+- commit técnico de conclusão do M13 presente localmente e em `origin/main`:
+  `1097ec90e8c1ad145daf0564180cd326d75bab7d`;
 - divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
@@ -335,9 +337,10 @@ Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo f
 
 ## Último commit estável
 
-O checkpoint técnico M13 está pronto para criação e publicação; o hash será registrado logo após
-o commit. O último hash já publicado antes dele é `ed82f03` (`docs: record M07-M12 review
-remediation`).
+`1097ec90e8c1ad145daf0564180cd326d75bab7d` —
+`feat: add M13 email classification workflow`.
+
+Este é o commit técnico M13, enviado a `origin/main`; M14 ainda não foi iniciado.
 
 ## Próxima ação recomendada
 

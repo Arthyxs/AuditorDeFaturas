@@ -636,7 +636,8 @@ nova chamada de IA ou perda do RFC/anexos. O worker encadeia ingestão → class
 idempotente; API/React fornecem revisão mínima com RBAC. Provider fake/PostgreSQL cobrem assunto
 enganoso/thread, limiares configuráveis, saída inválida, falha/retry e repetição pós-movimento.
 Suíte completa: `107 passed, 3 skipped`; Ruff, format, mypy, frontend, Alembic, build e Compose
-passaram sem credenciais externas. Commit técnico: pendente de registro após criação do checkpoint.
+passaram sem credenciais externas. Commit técnico:
+`1097ec90e8c1ad145daf0564180cd326d75bab7d`.
 
 ### M14 — Entrada canônica, auditoria manual e criação de fatura
 
