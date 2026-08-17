@@ -50,3 +50,14 @@ class CreatedAtMixin:
         nullable=False,
         server_default=func.now(),
     )
+
+
+class UpdatedAtMixin:
+    """Database-generated timestamp refreshed when mutable metadata changes."""
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )

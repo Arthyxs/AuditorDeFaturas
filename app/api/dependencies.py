@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.application.services.auth import AuthenticationError, AuthService
 from app.config import Settings
 from app.infrastructure.persistence.models import User, UserRole
+from app.ports.storage import StorageProvider
 
 SESSION_COOKIE_NAME = "invoice_auditor_session"
 
@@ -33,6 +34,12 @@ def get_auth_service(
     """Bind authentication to the request database transaction and settings."""
     settings: Settings = request.app.state.settings
     return AuthService(database, settings)
+
+
+def get_storage(request: Request) -> StorageProvider:
+    """Expose the configured storage implementation through its replaceable port."""
+    storage: StorageProvider = request.app.state.storage_provider
+    return storage
 
 
 def verify_same_origin(request: Request) -> None:

@@ -2,17 +2,21 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** fundação executável, segura e persistente concluída até M06
-**Macroetapa atual:** B — Fundação executável, segura e persistente
-**Milestone atual:** nenhum em execução; remediação CRITICAL/HIGH da revisão concluída, M07 não iniciado
+**Fase atual:** catálogo/API de tarifários concluído até M07
+**Macroetapa atual:** C — Tarifários e execução durável
+**Milestone atual:** M07 concluído; M08 é o próximo milestone autorizado
 
 ## Resumo executivo
 
-M00–M06 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M07 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
 parsers reais com limites de segurança.
+
+M07 adicionou catálogo PostgreSQL e API de tarifários com upload múltiplo, paginação, detalhe,
+download verificado, metadata, ativação, versionamento append-only e soft delete. Nenhuma regra
+tarifária, parser de negócio ou associação fixa com parceiro foi criada.
 
 Nenhuma regra de negócio, entidade futura, integração ou job foi antecipado.
 O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis permanecem no M09.
@@ -26,8 +30,9 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - **M04 — Persistência, migrations e transações:** concluído em 2026-08-16.
 - **M05 — Autenticação, RBAC e primeiro administrador:** concluído em 2026-08-16.
 - **M06 — Storage local imutável e uploads seguros:** concluído em 2026-08-16.
+- **M07 — Catálogo e API de tarifários:** concluído em 2026-08-17; commit técnico em fechamento.
 
-## Estrutura entregue até M06
+## Estrutura entregue até M07
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -74,11 +79,16 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - exclusão física negada por padrão e liberada somente com motivo/referências verificadas;
 - persistência comprovada após recriação real do container para seis áreas, inclusive
   `emails` e `attachments`.
+- entidade/migration `tariff_files` com metadata, SHA-256, linhagem de versão e soft delete;
+- porta de catálogo independente de SQLAlchemy e repository PostgreSQL com row lock de versão;
+- API `/api/tariffs` com upload múltiplo, paginação/filtros, detalhe, download, PATCH,
+  versionamento e DELETE lógico;
+- RBAC de leitura para todos os papéis e escrita apenas para `ADMIN`/`OPERATOR`.
 
 ## Trabalho não iniciado
 
-- M07–M26;
-- tarifários e interfaces de produto;
+- M08–M26;
+- interface frontend de tarifários;
 - IMAP, OpenAI e demais integrações;
 - regras financeiras, auditoria, relatórios e golden cases.
 
@@ -154,24 +164,27 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 
 ## Status de testes, build e execução
 
-- suíte completa com PostgreSQL real e recriação Docker: **PASS**, 73 testes; 1 skip
-  condicional do setup Linux no host Windows, executado separadamente em container Linux;
+- suíte completa com PostgreSQL real: **PASS**, 74 testes; 3 skips condicionais identificados
+  (setup Linux e 2 testes Docker de storage); os 2 testes de storage passaram separadamente;
 - regressões de revisão: **PASS** para SPA/API na origem canônica, seis áreas persistentes,
   ACL Windows, modo Linux `0600`, parsers válidos e casos adversariais;
-- Ruff lint e format check: **PASS**, 76 arquivos;
-- mypy estrito: **PASS**, 64 arquivos;
+- Ruff lint e format check: **PASS**, 77 arquivos;
+- mypy estrito: **PASS**, 72 arquivos;
 - frontend ESLint, TypeScript e Vite: **PASS** no stage Docker;
 - Docker build sem cache com CA oficial via secret: **PASS**; nenhum bypass de TLS;
 - Compose config e health: **PASS**, `app`, `worker` e `postgres` saudáveis;
 - raiz `/`: **PASS**, shell React; `/api/health/live`: **PASS**;
-- migration atual: `20260816_0002 (head)`; `alembic check`: **PASS**, sem drift;
+- migration atual após M07: `20260817_0003 (head)`; `alembic check`: **PASS**, sem drift;
+- aceitação M07: **PASS**, 3 testes API cobrindo sete formatos, papéis, integridade,
+  paginação, versão, nomes duplicados e soft delete;
 - scan pré-commit: **PASS**, sem `.env`, CA, segredos, dados operacionais ou artefatos.
 
 ## Bloqueios, riscos e findings
 
 Não há finding CRITICAL ou HIGH aberto. Permanecem abertos REVIEW-005–008 (MEDIUM) e
 REVIEW-009 (LOW); REVIEW-010 e REVIEW-011 foram corrigidos por serem seguros e diretamente
-relacionados à validação desta remediação. M07 não foi iniciado neste chat.
+relacionados à validação da fundação. Nenhum deles bloqueou a aceitação de M07; a nova camada de
+tarifários não repete a inversão de dependência registrada em REVIEW-005.
 
 ## Último commit estável
 
@@ -181,5 +194,5 @@ Este é o commit técnico final das correções CRITICAL/HIGH solicitadas.
 
 ## Próxima ação recomendada
 
-Em uma nova execução autorizada, avaliar/corrigir os findings MEDIUM restantes da fundação
-antes de decidir o início de M07. Não iniciar M07 como continuação automática desta remediação.
+Implementar M08 — interface de gestão de tarifários — usando exclusivamente a API e os papéis
+entregues em M07. Não iniciar M09 antes do checkpoint completo de M08.

@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M06 implementados; HIGH da revisão corrigidos; M07 não iniciado
+**Estado:** FECHADO E APROVADO — M00–M07 implementados; M08 é o próximo milestone
 **Atualizado em:** 2026-08-17
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -423,7 +423,7 @@ Ruff, mypy estrito, ESLint, TypeScript, build Docker e health dos três serviço
 ### M06 — Storage local imutável e uploads seguros
 
 **Status:** COMPLETED — concluído em 2026-08-16 e revalidado após correções HIGH em
-2026-08-17; M07 não iniciado. REVIEW-008 (MEDIUM) permanece rastreado.
+2026-08-17. REVIEW-008 (MEDIUM) permanece rastreado; M07 foi concluído sem ampliar esse finding.
 
 **Objetivo:** preservar arquivos com integridade e segurança.
 
@@ -451,6 +451,8 @@ ESLint, TypeScript, build Docker sem cache, Alembic sem drift e health foram apr
 
 ### M07 — Catálogo e API de tarifários
 
+**Status:** COMPLETED — concluído e validado em 2026-08-17; M08 desbloqueado.
+
 **Objetivo:** tornar tarifários originais gerenciáveis e rastreáveis.
 
 **Funcionalidades:** upload múltiplo; lista paginada; detalhe; download; descrição/observação; ativar/desativar; versão; soft delete; bloqueio de exclusão física quando referenciado.
@@ -462,6 +464,13 @@ ESLint, TypeScript, build Docker sem cache, Alembic sem drift e health foram apr
 **Testes necessários:** API por papel; upload de todos os formatos declarados tecnicamente suportados; hash; paginação; soft delete; arquivo referenciado; nomes duplicados.
 
 **Critério objetivo de conclusão:** a API mínima de tarifários funciona com persistência, autorização e integridade; nenhum update sobrescreve o blob original.
+
+**Evidência de conclusão:** API autenticada de upload múltiplo, paginação, detalhe, download,
+metadata, ativação, versionamento explícito e soft delete implementada sobre storage imutável e
+migration `20260817_0003`. A matriz `ADMIN`/`OPERATOR`/`VIEWER`, os sete formatos suportados,
+hash, nomes duplicados, linhagem e preservação do blob foram aprovados. Suíte completa: 74
+testes aprovados e 3 skips condicionais; os 2 testes Docker de storage foram executados
+separadamente. Ruff, format, mypy, Alembic sem drift, build e Compose saudáveis aprovados.
 
 ### M08 — Interface de gestão de tarifários
 

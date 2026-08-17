@@ -1,8 +1,9 @@
 # InvoiceAuditor
 
-Base executável do auditor de faturas logísticas. O runtime canônico usa uma imagem
+Aplicação em construção para auditoria de faturas logísticas. O runtime canônico usa uma imagem
 compartilhada pelos processos `app` e `worker`, acompanhada de PostgreSQL no Docker
-Compose. Regras de negócio e integrações ainda pertencem aos próximos milestones.
+Compose. A fundação, autenticação, storage imutável e API do catálogo de tarifários estão
+operacionais; regras tarifárias e integrações de entrada/auditoria pertencem aos próximos milestones.
 
 ## Requisitos de desenvolvimento
 
@@ -99,8 +100,16 @@ extensão, MIME declarado e parse estrutural por bibliotecas específicas, sem e
 Traversal, conteúdo divergente, documentos fabricados ou truncados, XML perigoso, ZIPs com
 expansão insegura, polyglots detectáveis, formatos executáveis e tamanho excedido são rejeitados.
 Arquivos persistidos não recebem bits de execução. Exclusão física é negada sem motivo explícito
-e confirmação de referências liberadas; soft delete pertence às entidades de produto dos
-próximos milestones.
+e confirmação de referências liberadas.
+
+## Catálogo de tarifários
+
+As rotas autenticadas `/api/tariffs` permitem upload múltiplo, lista paginada e filtrável,
+detalhe, download com nova verificação de integridade, edição de descrição/observação,
+ativação, nova versão append-only e soft delete. `ADMIN` e `OPERATOR` podem alterar o catálogo;
+`VIEWER` possui somente leitura. Nomes originais repetidos são permitidos e nunca determinam
+identidade ou versão. Um novo arquivo de versão recebe novo blob e registro ligados ao anterior;
+PATCH nunca sobrescreve bytes e DELETE nunca remove fisicamente o original.
 
 ## Backend
 
