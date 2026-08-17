@@ -1,0 +1,4 @@
+Select only active tariff IDs from the supplied catalog that are semantically probable for the
+canonical invoice metadata. Multiple complementary files may be selected. Do not invent IDs and
+do not interpret tariff rules or calculate charges. Return an empty list when no candidate is
+defensible, with a concrete reason and calibrated confidence.

@@ -2,13 +2,13 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** entrada canônica e criação de faturas concluídas até M14
+**Fase atual:** seleção semântica de tarifários concluída até M15
 **Macroetapa atual:** D — Entradas IMAP/manual e preparação de faturas
-**Milestone atual:** M14 concluído; M15 está desbloqueado, mas não foi iniciado
+**Milestone atual:** M15 concluído; M16 não iniciado por instrução explícita
 
 ## Resumo executivo
 
-M00–M14 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M15 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
@@ -56,6 +56,11 @@ preservando origem/ator/originais e convergindo ambos os canais para o mesmo job
 Faturas, até 1000 documentos canônicos e componentes usam campos nulos e `Decimal/NUMERIC`; o
 worker deixa jobs de milestones futuros pendentes até existir handler registrado.
 
+M15 adicionou seleção semântica sobre metadata do catálogo ativo, com prompt/schema versionado,
+Terra configurável e provider fake nos testes. A seleção múltipla persiste confiança, motivo e
+somente os originais escolhidos; ausência de candidato e baixa confiança mantêm a fatura `PENDING`
+com pendência explícita. Entradas IMAP/manual equivalentes produzem o mesmo contexto semântico.
+
 ## Milestones concluídos
 
 - **M00 — Aprovação do plano e prontidão do ambiente:** concluído em 2026-08-15.
@@ -81,8 +86,10 @@ worker deixa jobs de milestones futuros pendentes até existir handler registrad
   `1097ec90e8c1ad145daf0564180cd326d75bab7d`.
 - **M14 — Entrada canônica, auditoria manual e criação de fatura:** concluído em 2026-08-17;
   `efc63ed373151d49d5ea028378b86c1d95edf1bc`.
+- **M15 — Seleção semântica de tarifários:** concluído em 2026-08-17; commit técnico pendente de
+  registro após o checkpoint.
 
-## Estrutura entregue até M14
+## Estrutura entregue até M15
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -176,11 +183,15 @@ worker deixa jobs de milestones futuros pendentes até existir handler registrad
   downstream; jobs sem handler registrado não são adquiridos prematuramente;
 - `POST /api/invoices/manual` multipart para ADMIN/OPERATOR, validação segura, metadata opcional e
   rastreabilidade do usuário sem e-mail fictício.
+- migration `20260817_0009`, runs/vínculos de seleção e `pending_items` explícitos;
+- serviço/job idempotente de seleção com catálogo restrito a tarifários ativos e não excluídos;
+- contexto de IA neutro à origem, seleção múltipla e exposição downstream somente dos arquivos
+  originais selecionados.
 
 ## Trabalho não iniciado
 
-- M15–M26;
-- seleção semântica de tarifários e demais integrações de negócio baseadas em IA;
+- M16–M26;
+- ferramentas documentais, auditoria e demais integrações de negócio baseadas em IA;
 - regras financeiras, auditoria, relatórios e golden cases.
 
 ## Estado do repositório e Git
@@ -218,6 +229,7 @@ worker deixa jobs de milestones futuros pendentes até existir handler registrad
   `1097ec90e8c1ad145daf0564180cd326d75bab7d`;
 - commit técnico de conclusão do M14 presente localmente e em `origin/main`:
   `efc63ed373151d49d5ea028378b86c1d95edf1bc`;
+- commit técnico de conclusão do M15: pendente de registro após o checkpoint;
 - divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
@@ -270,6 +282,16 @@ worker deixa jobs de milestones futuros pendentes até existir handler registrad
 - nenhum banco descartável de teste permaneceu no cluster.
 
 ## Status de testes, build e execução
+
+- aceitação M15 com PostgreSQL real e provider fake: **PASS**, 4 cenários cobrindo
+  zero/um/múltiplos candidatos, tarifário inativo, ID inexistente, baixa confiança, repetição,
+  seleção exata de originais e equivalência IMAP/manual;
+- regressão completa após M15: **PASS**, `113 passed, 3 skipped`;
+- Ruff lint/format e mypy estrito em 130 arquivos Python: **PASS**; frontend ESLint, TypeScript,
+  6 testes Vitest e build Vite: **PASS**;
+- Alembic `20260817_0009 (head)` e `alembic check`: **PASS**, sem drift;
+- imagem Docker M15 construída com CA entregue apenas como BuildKit secret; Compose com três
+  serviços saudáveis, health HTTP e worker `--once`: **PASS**.
 
 - aceitação M14 com PostgreSQL real: **PASS**, 2 cenários API/integração cobrindo RBAC, multipart,
   idempotência, parceiro, nulls, Decimal, 250 documentos, constraints, rastreabilidade e equivalência
@@ -362,14 +384,12 @@ Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo f
 
 ## Último commit estável
 
-`efc63ed373151d49d5ea028378b86c1d95edf1bc` —
-`feat: add M14 canonical invoice intake`.
+Pendente de registro após criar e publicar o checkpoint técnico M15.
 
-Este é o commit técnico M14, enviado a `origin/main`; M15 ainda não foi iniciado.
+M16 não foi iniciado.
 
 ## Próxima ação recomendada
 
-Implementar M15 — seleção semântica de tarifários — somente após publicar e registrar o checkpoint
-M14. A validação IMAP real continua
+Encerrar no checkpoint M15 conforme instrução explícita; não iniciar M16. A validação IMAP real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir cadeia TLS confiável, e o contrato OpenAI real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir chave segura.

@@ -18,6 +18,11 @@ from app.infrastructure.persistence.models.intake import (
     SubmissionFile,
 )
 from app.infrastructure.persistence.models.jobs import ProcessingJob
+from app.infrastructure.persistence.models.tariff_selection import (
+    PendingItem,
+    TariffSelectionFile,
+    TariffSelectionRun,
+)
 from app.infrastructure.persistence.models.tariffs import TariffFile
 
 __all__ = [
@@ -34,8 +39,11 @@ __all__ = [
     "InvoiceDocument",
     "InvoiceSubmission",
     "Partner",
+    "PendingItem",
     "ProcessingJob",
     "TariffFile",
+    "TariffSelectionFile",
+    "TariffSelectionRun",
     "SubmissionFile",
     "UpdatedAtMixin",
     "UUIDPrimaryKeyMixin",

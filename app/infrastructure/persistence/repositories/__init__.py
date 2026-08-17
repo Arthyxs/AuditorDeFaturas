@@ -11,6 +11,9 @@ from app.infrastructure.persistence.repositories.invoice_intake import (
     PostgreSQLInvoiceIntakeRepository,
 )
 from app.infrastructure.persistence.repositories.jobs import JobLeaseError, PostgreSQLJobQueue
+from app.infrastructure.persistence.repositories.tariff_selection import (
+    PostgreSQLTariffSelectionRepository,
+)
 
 __all__ = [
     "JobLeaseError",
@@ -19,6 +22,7 @@ __all__ = [
     "PostgreSQLIMAPInvoiceSourceRepository",
     "PostgreSQLInvoiceIntakeRepository",
     "PostgreSQLMailIngestionRepository",
+    "PostgreSQLTariffSelectionRepository",
     "PostgreSQLEmailClassificationRepository",
     "SqlAlchemyRepository",
 ]

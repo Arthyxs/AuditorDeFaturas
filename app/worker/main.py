@@ -17,6 +17,7 @@ from app.application.services.email_classification import (
 from app.application.services.email_ingestion import EmailIngestionService
 from app.application.services.invoice_intake import IMAPInvoiceIntakeAdapter, InvoiceIntakeService
 from app.application.services.jobs import WORKER_TICK_JOB, PollScheduler
+from app.application.services.tariff_selection import TariffSelectionService
 from app.config import Settings, get_settings
 from app.domain.jobs import JobRecord
 from app.infrastructure.ai.openai_provider import OpenAIProvider
@@ -27,6 +28,7 @@ from app.infrastructure.persistence.repositories import (
     PostgreSQLEmailClassificationRepository,
     PostgreSQLJobQueue,
     PostgreSQLMailIngestionRepository,
+    PostgreSQLTariffSelectionRepository,
 )
 from app.infrastructure.persistence.repositories.invoice_intake import (
     PostgreSQLIMAPInvoiceSourceRepository,
@@ -41,6 +43,8 @@ from app.worker.jobs.email_classification import (
     EmailClassificationJobHandler,
 )
 from app.worker.jobs.email_ingestion import EMAIL_INGESTION_JOB, EmailIngestionJobHandler
+from app.worker.jobs.invoice_intake import TARIFF_SELECTION_JOB
+from app.worker.jobs.tariff_selection import TariffSelectionJobHandler
 
 JobHandler = Callable[[JobRecord], None]
 
@@ -155,6 +159,25 @@ def run(settings: Settings | None = None, *, once: bool = False) -> None:
     queue = PostgreSQLJobQueue(session_factory)
     email_provider = None
     handlers: dict[str, JobHandler] = {}
+    openai_key = (
+        resolved_settings.openai_api_key.get_secret_value()
+        if resolved_settings.openai_api_key
+        else None
+    )
+    ai = AIExecutionService(
+        router=AIProviderRouter(
+            {
+                "openai": OpenAIProvider(
+                    api_key=openai_key,
+                    timeout_seconds=resolved_settings.ai_timeout_seconds,
+                )
+            }
+        ),
+        telemetry=PostgreSQLAITelemetryRepository(session_factory),
+    )
+    prompts = PromptRepository(
+        Path(__file__).resolve().parents[1] / "infrastructure" / "ai" / "prompts"
+    )
     password = (
         resolved_settings.imap_password.get_secret_value()
         if resolved_settings.imap_password
@@ -184,30 +207,12 @@ def run(settings: Settings | None = None, *, once: bool = False) -> None:
             classification_queue=queue,
             max_attempts=resolved_settings.worker_max_attempts,
         )
-        openai_key = (
-            resolved_settings.openai_api_key.get_secret_value()
-            if resolved_settings.openai_api_key
-            else None
-        )
-        ai = AIExecutionService(
-            router=AIProviderRouter(
-                {
-                    "openai": OpenAIProvider(
-                        api_key=openai_key,
-                        timeout_seconds=resolved_settings.ai_timeout_seconds,
-                    )
-                }
-            ),
-            telemetry=PostgreSQLAITelemetryRepository(session_factory),
-        )
         handlers[EMAIL_CLASSIFICATION_JOB] = EmailClassificationJobHandler(
             EmailClassificationService(
                 repository=PostgreSQLEmailClassificationRepository(session_factory),
                 email_provider=email_provider,
                 ai=ai,
-                prompt_provider=PromptRepository(
-                    Path(__file__).resolve().parents[1] / "infrastructure" / "ai" / "prompts"
-                ),
+                prompt_provider=prompts,
                 provider=resolved_settings.ai_email_provider,
                 model=resolved_settings.ai_email_model,
                 min_confidence=resolved_settings.email_classification_min_confidence,
@@ -229,6 +234,16 @@ def run(settings: Settings | None = None, *, once: bool = False) -> None:
                 ),
             ),
         )
+    handlers[TARIFF_SELECTION_JOB] = TariffSelectionJobHandler(
+        TariffSelectionService(
+            repository=PostgreSQLTariffSelectionRepository(session_factory),
+            ai=ai,
+            prompt_provider=prompts,
+            provider=resolved_settings.ai_tariff_selector_provider,
+            model=resolved_settings.ai_tariff_selector_model,
+            min_confidence=resolved_settings.tariff_selection_min_confidence,
+        )
+    )
     runner = WorkerRunner(queue, resolved_settings, worker_id=_worker_id(), handlers=handlers)
     try:
         write_heartbeat()

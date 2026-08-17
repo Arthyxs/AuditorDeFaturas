@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M14 implementados; M15 é o próximo milestone
+**Estado:** FECHADO E APROVADO — M00–M15 implementados; M16 não iniciado
 **Atualizado em:** 2026-08-17
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -678,6 +678,8 @@ format, mypy, frontend, Alembic, build e Compose passaram. Commit técnico:
 
 ### M15 — Seleção semântica de tarifários
 
+**Status:** COMPLETED — concluído em 2026-08-17; M16 não iniciado por instrução explícita.
+
 **Objetivo:** selecionar somente os candidatos prováveis antes da auditoria.
 
 **Funcionalidades:** catálogo ativo; metadata contextual; seletor Terra configurável; seleção múltipla; confiança/motivo; vínculo dos arquivos selecionados; `PENDING_NO_TARIFF` em nível de fatura.
@@ -689,6 +691,14 @@ format, mypy, frontend, Alembic, build e Compose passaram. Commit técnico:
 **Testes necessários:** zero/um/múltiplos candidatos; tarifário inativo; saída com ID inexistente; baixa confiança; repetição; garantia de que arquivos não escolhidos não entram na auditoria; resultados equivalentes para submissão IMAP e manual com os mesmos documentos.
 
 **Critério objetivo de conclusão:** seleção válida persiste exatamente os arquivos escolhidos; nenhum candidato cria fatura `PENDING` e pendência explícita, nunca `CORRECT`.
+
+**Evidência de conclusão:** migration `20260817_0009`; catálogo limitado a tarifários ativos e não
+excluídos; prompt/schema versionado com seletor Terra configurável e provider fake; seleção múltipla
+com confiança/motivo e vínculo somente dos originais escolhidos; zero candidato e baixa confiança
+mantêm a fatura `PENDING` com pendência explícita. Testes PostgreSQL cobrem zero/um/múltiplos
+candidatos, inativo, ID inexistente, repetição e equivalência IMAP/manual. Suíte completa:
+`113 passed, 3 skipped`; Ruff, format, mypy, frontend, Alembic, build e Compose passaram. Commit
+técnico: pendente de registro após o checkpoint.
 
 ### M16 — Ferramentas genéricas de PDF, planilha e imagem
 

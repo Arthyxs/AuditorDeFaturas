@@ -59,6 +59,9 @@ class Settings(BaseSettings):
     email_classification_min_confidence: Decimal = Field(
         default=Decimal("0.80"), ge=Decimal("0"), le=Decimal("1")
     )
+    tariff_selection_min_confidence: Decimal = Field(
+        default=Decimal("0.80"), ge=Decimal("0"), le=Decimal("1")
+    )
 
     worker_enabled: bool = True
     worker_poll_interval_seconds: float = Field(default=2.0, ge=0.1, le=300)
