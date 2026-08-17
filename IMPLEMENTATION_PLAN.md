@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M07 implementados; M08 é o próximo milestone
+**Estado:** FECHADO E APROVADO — M00–M08 implementados; M09 é o próximo milestone
 **Atualizado em:** 2026-08-17
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -475,6 +475,8 @@ Commit técnico: `f3c8538f7d45575557c3ef347723edccd8b8b499`.
 
 ### M08 — Interface de gestão de tarifários
 
+**Status:** COMPLETED — concluído e validado em 2026-08-17; M09 desbloqueado.
+
 **Objetivo:** entregar gestão de tarifários pelo frontend.
 
 **Funcionalidades:** upload múltiplo com progresso/erro; listagem; filtros; detalhe; download; descrição; ativação; soft delete; hash e histórico de uso quando disponível.
@@ -486,6 +488,12 @@ Commit técnico: `f3c8538f7d45575557c3ef347723edccd8b8b499`.
 **Testes necessários:** componentes; fluxo e2e de upload/edição/download/desativação; erros de validação; permissões `VIEWER`.
 
 **Critério objetivo de conclusão:** um `ADMIN`/`OPERATOR` gerencia tarifários pela interface e um `VIEWER` não executa ações de escrita.
+
+**Evidência de conclusão:** workspace React responsivo com upload múltiplo, progresso e erro por
+arquivo, lista paginada, busca/status, detalhe, download, SHA-256, uso quando disponível,
+linhagem, edição, ativação e soft delete. Seis testes Vitest/Testing Library aprovaram o fluxo
+integrado e permissões `VIEWER`; ESLint, TypeScript, Vite e build Docker executando os testes
+passaram. O bundle servido pelo Compose carregou sem erro de console na inspeção visual local.
 
 ### M09 — Worker durável, scheduler e locks
 

@@ -111,6 +111,11 @@ ativação, nova versão append-only e soft delete. `ADMIN` e `OPERATOR` podem a
 identidade ou versão. Um novo arquivo de versão recebe novo blob e registro ligados ao anterior;
 PATCH nunca sobrescreve bytes e DELETE nunca remove fisicamente o original.
 
+Depois da autenticação, a SPA apresenta esse catálogo com busca e filtro de status, detalhe,
+hash completo, histórico de versões, download e indicação de uso quando houver auditorias
+relacionadas. Uploads múltiplos mostram andamento e erro por arquivo. Controles de edição,
+ativação e remoção aparecem somente para `ADMIN` e `OPERATOR`; `VIEWER` permanece em leitura.
+
 ## Backend
 
 Crie e ative um ambiente virtual e instale o projeto com as dependências de desenvolvimento:

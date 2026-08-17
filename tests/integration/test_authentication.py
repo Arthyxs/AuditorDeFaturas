@@ -80,7 +80,10 @@ def settings_for(database_url: str) -> Settings:
 
 def app_for(database_url: str) -> FastAPI:
     """Create a test app bound to the disposable database."""
-    return create_app(settings_for(database_url))
+    return create_app(
+        settings_for(database_url),
+        frontend_directory=PROJECT_ROOT / ".missing-test-frontend",
+    )
 
 
 def bootstrap(client: TestClient, *, username: str = "admin") -> None:
@@ -249,6 +252,8 @@ def test_rbac_matrix(postgres_database_url: str) -> None:
                 json={"username": role.value.casefold(), "password": TEST_PASSWORD},
             )
             assert login.status_code == 200
+            assert login.json()["role"] == role.value
+            assert client.get("/api/auth/me").json()["role"] == role.value
             assert [
                 client.get(path).status_code
                 for path in ("/test/admin", "/test/operate", "/test/view")

@@ -2,13 +2,13 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** catálogo/API de tarifários concluído até M07
+**Fase atual:** catálogo, API e frontend de tarifários concluídos até M08
 **Macroetapa atual:** C — Tarifários e execução durável
-**Milestone atual:** M07 concluído; M08 é o próximo milestone autorizado
+**Milestone atual:** M08 concluído; M09 é o próximo milestone autorizado
 
 ## Resumo executivo
 
-M00–M07 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M08 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
@@ -17,6 +17,10 @@ parsers reais com limites de segurança.
 M07 adicionou catálogo PostgreSQL e API de tarifários com upload múltiplo, paginação, detalhe,
 download verificado, metadata, ativação, versionamento append-only e soft delete. Nenhuma regra
 tarifária, parser de negócio ou associação fixa com parceiro foi criada.
+
+M08 adicionou a gestão React do catálogo com feedback por arquivo, filtros, detalhe, integridade,
+linhagem e ações condicionadas por papel. O bundle de produção executa os testes frontend durante
+o build e foi carregado no runtime canônico sem erros de console.
 
 Nenhuma regra de negócio, entidade futura, integração ou job foi antecipado.
 O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis permanecem no M09.
@@ -32,8 +36,9 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - **M06 — Storage local imutável e uploads seguros:** concluído em 2026-08-16.
 - **M07 — Catálogo e API de tarifários:** concluído em 2026-08-17;
   `f3c8538f7d45575557c3ef347723edccd8b8b499`.
+- **M08 — Interface de gestão de tarifários:** concluído em 2026-08-17; commit técnico em fechamento.
 
-## Estrutura entregue até M07
+## Estrutura entregue até M08
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -85,11 +90,15 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - API `/api/tariffs` com upload múltiplo, paginação/filtros, detalhe, download, PATCH,
   versionamento e DELETE lógico;
 - RBAC de leitura para todos os papéis e escrita apenas para `ADMIN`/`OPERATOR`.
+- cliente API frontend com propagação segura de detalhes de validação;
+- workspace de tarifários responsivo com upload/progresso, filtros, detalhe, download,
+  metadata, status, soft delete e histórico de versões;
+- Vitest, Testing Library e jsdom integrados ao build Docker com 6 testes de componentes/cliente.
 
 ## Trabalho não iniciado
 
-- M08–M26;
-- interface frontend de tarifários;
+- M09–M26;
+- worker durável, scheduler e locks;
 - IMAP, OpenAI e demais integrações;
 - regras financeiras, auditoria, relatórios e golden cases.
 
@@ -180,6 +189,8 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - migration atual após M07: `20260817_0003 (head)`; `alembic check`: **PASS**, sem drift;
 - aceitação M07: **PASS**, 3 testes API cobrindo sete formatos, papéis, integridade,
   paginação, versão, nomes duplicados e soft delete;
+- aceitação M08: **PASS**, 6 testes frontend; ESLint, TypeScript, Vite e inspeção visual do
+  bundle canônico sem erro de console;
 - scan pré-commit: **PASS**, sem `.env`, CA, segredos, dados operacionais ou artefatos.
 
 ## Bloqueios, riscos e findings
@@ -197,5 +208,5 @@ Este é o commit técnico final do M07, enviado a `origin/main`.
 
 ## Próxima ação recomendada
 
-Implementar M08 — interface de gestão de tarifários — usando exclusivamente a API e os papéis
-entregues em M07. Não iniciar M09 antes do checkpoint completo de M08.
+Implementar M09 — worker durável, scheduler e locks — exclusivamente sobre PostgreSQL, sem
+Redis/Celery/broker. Não iniciar M10 antes do checkpoint completo de M09.

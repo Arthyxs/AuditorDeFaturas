@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 
+import { TariffManagement } from './features/tariffs/TariffManagement'
+
 type User = { username: string; role: 'ADMIN' | 'OPERATOR' | 'VIEWER' }
 type Mode = 'loading' | 'bootstrap' | 'login' | 'authenticated'
 
@@ -63,14 +65,10 @@ export function App() {
 
   if (mode === 'authenticated' && user) {
     return (
-      <main className="app-shell">
-        <section className="welcome-card" aria-labelledby="page-title">
-          <p className="eyebrow">InvoiceAuditor</p>
-          <h1 id="page-title">Sessão protegida</h1>
-          <p>Conectado como <strong>{user.username}</strong> ({user.role}).</p>
-          <button type="button" onClick={() => void logout()}>Sair</button>
-        </section>
-      </main>
+      <div className="authenticated-shell">
+        <header className="topbar"><a className="brand" href="/">InvoiceAuditor</a><div><span>{user.username}</span><button className="secondary" type="button" onClick={() => void logout()}>Sair</button></div></header>
+        <main className="content-shell"><TariffManagement role={user.role} /></main>
+      </div>
     )
   }
 
