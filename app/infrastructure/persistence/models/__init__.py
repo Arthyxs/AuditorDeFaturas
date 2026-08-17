@@ -9,6 +9,14 @@ from app.infrastructure.persistence.models.base import (
     UUIDPrimaryKeyMixin,
 )
 from app.infrastructure.persistence.models.email import MailAccount, MailAttachment, MailMessage
+from app.infrastructure.persistence.models.intake import (
+    DocumentChargeItem,
+    Invoice,
+    InvoiceDocument,
+    InvoiceSubmission,
+    Partner,
+    SubmissionFile,
+)
 from app.infrastructure.persistence.models.jobs import ProcessingJob
 from app.infrastructure.persistence.models.tariffs import TariffFile
 
@@ -21,8 +29,14 @@ __all__ = [
     "MailAccount",
     "MailAttachment",
     "MailMessage",
+    "DocumentChargeItem",
+    "Invoice",
+    "InvoiceDocument",
+    "InvoiceSubmission",
+    "Partner",
     "ProcessingJob",
     "TariffFile",
+    "SubmissionFile",
     "UpdatedAtMixin",
     "UUIDPrimaryKeyMixin",
     "User",

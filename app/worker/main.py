@@ -15,6 +15,7 @@ from app.application.services.email_classification import (
     EmailClassificationService,
 )
 from app.application.services.email_ingestion import EmailIngestionService
+from app.application.services.invoice_intake import IMAPInvoiceIntakeAdapter, InvoiceIntakeService
 from app.application.services.jobs import WORKER_TICK_JOB, PollScheduler
 from app.config import Settings, get_settings
 from app.domain.jobs import JobRecord
@@ -26,6 +27,10 @@ from app.infrastructure.persistence.repositories import (
     PostgreSQLEmailClassificationRepository,
     PostgreSQLJobQueue,
     PostgreSQLMailIngestionRepository,
+)
+from app.infrastructure.persistence.repositories.invoice_intake import (
+    PostgreSQLIMAPInvoiceSourceRepository,
+    PostgreSQLInvoiceIntakeRepository,
 )
 from app.infrastructure.persistence.session import create_database_engine, create_session_factory
 from app.infrastructure.storage import LocalStorageProvider
@@ -77,7 +82,11 @@ class WorkerRunner:
         )
         if include_schedule:
             self._scheduler.enqueue_due(now)
-        job = self._queue.claim(worker_id=self._worker_id, now=now)
+        job = self._queue.claim(
+            worker_id=self._worker_id,
+            now=now,
+            job_types=tuple(self._handlers),
+        )
         if job is None:
             return None
 
@@ -210,7 +219,15 @@ def run(settings: Settings | None = None, *, once: bool = False) -> None:
                 ),
                 thread_max_messages=resolved_settings.email_thread_max_messages,
                 thread_max_characters=resolved_settings.email_thread_max_characters,
-            )
+            ),
+            invoice_intake=IMAPInvoiceIntakeAdapter(
+                source_repository=PostgreSQLIMAPInvoiceSourceRepository(session_factory),
+                intake=InvoiceIntakeService(
+                    repository=PostgreSQLInvoiceIntakeRepository(session_factory),
+                    queue=queue,
+                    max_attempts=resolved_settings.worker_max_attempts,
+                ),
+            ),
         )
     runner = WorkerRunner(queue, resolved_settings, worker_id=_worker_id(), handlers=handlers)
     try:

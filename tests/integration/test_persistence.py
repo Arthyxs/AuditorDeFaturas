@@ -102,7 +102,7 @@ def test_upgrade_empty_database_to_head(postgres_database_url: str) -> None:
     command.upgrade(configuration, "head")
     engine = create_database_engine_from_url(postgres_database_url)
     try:
-        assert current_revision(engine) == "20260817_0007"
+        assert current_revision(engine) == "20260817_0008"
     finally:
         engine.dispose()
 
@@ -115,7 +115,7 @@ def test_upgrade_from_previous_base_revision(postgres_database_url: str) -> None
     command.upgrade(configuration, "head")
     engine = create_database_engine_from_url(postgres_database_url)
     try:
-        assert current_revision(engine) == "20260817_0007"
+        assert current_revision(engine) == "20260817_0008"
     finally:
         engine.dispose()
 

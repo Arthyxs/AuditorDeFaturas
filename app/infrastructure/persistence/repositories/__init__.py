@@ -6,12 +6,18 @@ from app.infrastructure.persistence.repositories.email import PostgreSQLMailInge
 from app.infrastructure.persistence.repositories.email_classification import (
     PostgreSQLEmailClassificationRepository,
 )
+from app.infrastructure.persistence.repositories.invoice_intake import (
+    PostgreSQLIMAPInvoiceSourceRepository,
+    PostgreSQLInvoiceIntakeRepository,
+)
 from app.infrastructure.persistence.repositories.jobs import JobLeaseError, PostgreSQLJobQueue
 
 __all__ = [
     "JobLeaseError",
     "PostgreSQLAITelemetryRepository",
     "PostgreSQLJobQueue",
+    "PostgreSQLIMAPInvoiceSourceRepository",
+    "PostgreSQLInvoiceIntakeRepository",
     "PostgreSQLMailIngestionRepository",
     "PostgreSQLEmailClassificationRepository",
     "SqlAlchemyRepository",

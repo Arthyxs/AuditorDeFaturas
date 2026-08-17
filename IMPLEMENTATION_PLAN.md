@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M13 implementados; M14 é o próximo milestone
+**Estado:** FECHADO E APROVADO — M00–M14 implementados; M15 é o próximo milestone
 **Atualizado em:** 2026-08-17
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -641,6 +641,8 @@ passaram sem credenciais externas. Commit técnico:
 
 ### M14 — Entrada canônica, auditoria manual e criação de fatura
 
+**Status:** COMPLETED — concluído em 2026-08-17; M15 desbloqueado.
+
 **Objetivo:** transformar uma entrada IMAP ou manual em agregado persistente e acionar o mesmo pipeline sem inventar dados nem duplicar lógica.
 
 **Funcionalidades:** `invoice_submissions` com origem `IMAP`/`MANUAL`; parceiros históricos; fatura; vínculos com originais; schemas canônicos de documento/componentes; campos nulos; estados iniciais; chave idempotente/hash; `POST /api/invoices/manual` multipart para `ADMIN`/`OPERATOR`, com fatura, anexos auxiliares e metadata/nota opcionais; `VIEWER` somente leitura. O caminho manual ignora classificação/movimentação de e-mail e enfileira exatamente os mesmos casos de uso de criação, seleção de tarifário e auditoria usados após um e-mail `INVOICE`.
@@ -663,6 +665,15 @@ M13 classificação ──────┴→ adapter de entrada IMAP → Invoice
 **Testes necessários:** RBAC do endpoint; upload multipart seguro; idempotência por chave/hash; parceiro conhecido/desconhecido; campos ausentes; moedas/decimais; centenas de documentos sintéticos; constraint de origem; comparação provando que submissões IMAP e manual equivalentes geram o mesmo comando/job downstream sem duplicação de serviço.
 
 **Critério objetivo de conclusão:** uma mensagem `INVOICE` ou submissão manual autorizada produz exatamente uma fatura rastreável; originais e ator/origem permanecem identificáveis; campos desconhecidos ficam nulos; ambos os canais entram no mesmo pipeline a partir de `InvoiceIntake`.
+
+**Evidência de conclusão:** migration `20260817_0008` cria submissões/arquivos canônicos,
+parceiros, faturas, documentos e componentes com constraints de origem e `NUMERIC(20,6)`. O
+`InvoiceIntakeService` é único para `IMAP`/`MANUAL`, aplica idempotência por chave e hash e enfileira
+o mesmo `invoice.select_tariffs`. `POST /api/invoices/manual` valida multipart/storage, metadata
+estrita, RBAC e origem; não fabrica e-mail. Testes PostgreSQL/API cobrem ADMIN/OPERATOR/VIEWER,
+duplicação, parceiro ausente/novo/reutilizado, campos nulos, rejeição de `float`, 250 documentos,
+constraints e equivalência downstream IMAP/manual. Suíte completa: `109 passed, 3 skipped`; Ruff,
+format, mypy, frontend, Alembic, build e Compose passaram. Commit técnico: pendente de registro.
 
 ### M15 — Seleção semântica de tarifários
 

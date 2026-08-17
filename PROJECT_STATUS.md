@@ -2,13 +2,13 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** classificação e movimentação de e-mail concluídas até M13
+**Fase atual:** entrada canônica e criação de faturas concluídas até M14
 **Macroetapa atual:** D — Entradas IMAP/manual e preparação de faturas
-**Milestone atual:** M13 concluído; M14 está desbloqueado, mas não foi iniciado
+**Milestone atual:** M14 concluído; M15 está desbloqueado, mas não foi iniciado
 
 ## Resumo executivo
 
-M00–M13 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M14 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
@@ -51,6 +51,11 @@ evidências/anexos/parceiro provável, revisão manual mínima e movimento IMAP 
 é salva antes do movimento, permitindo retry sem repetir IA; ingestão encadeia o job de
 classificação por chave idempotente. Testes usam somente provider fake/mock.
 
+M14 adicionou a fronteira canônica `InvoiceIntake`, submissão manual autenticada e adapter IMAP,
+preservando origem/ator/originais e convergindo ambos os canais para o mesmo job downstream.
+Faturas, até 1000 documentos canônicos e componentes usam campos nulos e `Decimal/NUMERIC`; o
+worker deixa jobs de milestones futuros pendentes até existir handler registrado.
+
 ## Milestones concluídos
 
 - **M00 — Aprovação do plano e prontidão do ambiente:** concluído em 2026-08-15.
@@ -74,8 +79,10 @@ classificação por chave idempotente. Testes usam somente provider fake/mock.
   `36b72678494c056772d7e2a351d1cd93226d194a`.
 - **M13 — Classificação, revisão e movimentação de e-mails:** concluído em 2026-08-17;
   `1097ec90e8c1ad145daf0564180cd326d75bab7d`.
+- **M14 — Entrada canônica, auditoria manual e criação de fatura:** concluído em 2026-08-17;
+  commit técnico pendente de registro.
 
-## Estrutura entregue até M13
+## Estrutura entregue até M14
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -163,11 +170,17 @@ classificação por chave idempotente. Testes usam somente provider fake/mock.
   provider/modelo configuráveis, com baixa confiança sempre convertida em revisão;
 - jobs idempotentes ingestão → classificação e retomada do movimento sem repetir chamada de IA;
 - API paginada/RBAC e interface React mínima para resolver `MANUAL_REVIEW`.
+- `invoice_submissions`/`submission_files`, `partners`, `invoices`, `invoice_documents` e
+  `document_charge_items`, com origem canônica e valores financeiros precisos;
+- `InvoiceIntakeService` único para IMAP/manual, idempotência concorrente e criação do mesmo job
+  downstream; jobs sem handler registrado não são adquiridos prematuramente;
+- `POST /api/invoices/manual` multipart para ADMIN/OPERATOR, validação segura, metadata opcional e
+  rastreabilidade do usuário sem e-mail fictício.
 
 ## Trabalho não iniciado
 
-- M14–M26;
-- entrada canônica/criação de faturas e demais integrações de negócio baseadas em IA;
+- M15–M26;
+- seleção semântica de tarifários e demais integrações de negócio baseadas em IA;
 - regras financeiras, auditoria, relatórios e golden cases.
 
 ## Estado do repositório e Git
@@ -255,6 +268,16 @@ classificação por chave idempotente. Testes usam somente provider fake/mock.
 - nenhum banco descartável de teste permaneceu no cluster.
 
 ## Status de testes, build e execução
+
+- aceitação M14 com PostgreSQL real: **PASS**, 2 cenários API/integração cobrindo RBAC, multipart,
+  idempotência, parceiro, nulls, Decimal, 250 documentos, constraints, rastreabilidade e equivalência
+  do job IMAP/manual;
+- regressão completa após M14: **PASS**, `109 passed, 3 skipped`;
+- Ruff lint/format e mypy estrito em 123 arquivos Python: **PASS**; frontend ESLint, TypeScript,
+  6 testes Vitest e build Vite: **PASS**;
+- Alembic `20260817_0008 (head)`, base → head → base → head e `alembic check`: **PASS**;
+- imagem Docker M14 construída com CA entregue apenas como BuildKit secret; Compose com três
+  serviços saudáveis, health HTTP e worker `--once`: **PASS**.
 
 - aceitação M13 com PostgreSQL real e provider fake: **PASS**, 2 cenários integrados cobrindo
   assunto enganoso/thread, limiares abaixo/exato/acima, mudança de configuração, limiar efetivo,
@@ -344,7 +367,7 @@ Este é o commit técnico M13, enviado a `origin/main`; M14 ainda não foi inici
 
 ## Próxima ação recomendada
 
-Implementar M14 — entrada canônica, submissão manual e criação de fatura — somente após publicar e
-registrar o checkpoint M13. A validação IMAP real continua
+Implementar M15 — seleção semântica de tarifários — somente após publicar e registrar o checkpoint
+M14. A validação IMAP real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir cadeia TLS confiável, e o contrato OpenAI real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir chave segura.

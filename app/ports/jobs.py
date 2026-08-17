@@ -22,7 +22,13 @@ class JobQueue(Protocol):
         priority: int = 0,
     ) -> tuple[JobRecord, bool]: ...
 
-    def claim(self, *, worker_id: str, now: datetime) -> JobRecord | None: ...
+    def claim(
+        self,
+        *,
+        worker_id: str,
+        now: datetime,
+        job_types: tuple[str, ...] | None = None,
+    ) -> JobRecord | None: ...
 
     def execution_guard(self, job_id: UUID) -> AbstractContextManager[None]:
         """Hold a crash-released guard preventing stale recovery during active execution."""

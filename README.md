@@ -176,7 +176,7 @@ O build de produção é gerado em `frontend/dist/`, diretório ignorado pelo Gi
 
 ## Limites atuais
 
-IMAP, MIME, contexto de thread, ingestão/deduplicação, provider de IA e
-classificação/revisão/movimentação estão implementados até M13. A classificação usa provider e
-modelo configuráveis, registra o limiar efetivo e pode ser testada sem credenciais pelo provider
-fake. Criação de faturas, seleção semântica, auditoria e relatórios começam em M14 e posteriores.
+IMAP, classificação/movimentação e a entrada canônica de faturas estão implementados até M14.
+ADMIN/OPERATOR podem enviar uma fatura manual por `POST /api/invoices/manual`; o canal manual e o
+IMAP preservam originais/origem e usam o mesmo pipeline sem e-mail fictício. A integração de IA
+continua testável com provider fake. Seleção semântica, auditoria e relatórios começam em M15.

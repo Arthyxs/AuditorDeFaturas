@@ -106,15 +106,24 @@ class PostgreSQLJobQueue:
                 raise RuntimeError("job enqueue did not return a durable record")
             return _record(job), inserted_id is not None
 
-    def claim(self, *, worker_id: str, now: datetime) -> JobRecord | None:
+    def claim(
+        self,
+        *,
+        worker_id: str,
+        now: datetime,
+        job_types: tuple[str, ...] | None = None,
+    ) -> JobRecord | None:
         with session_scope(self._session_factory) as database:
+            statement = select(ProcessingJob).where(
+                ProcessingJob.status.in_([JobStatus.PENDING, JobStatus.RETRY_SCHEDULED]),
+                ProcessingJob.available_at <= now,
+            )
+            if job_types is not None:
+                if not job_types:
+                    return None
+                statement = statement.where(ProcessingJob.job_type.in_(job_types))
             job = database.scalar(
-                select(ProcessingJob)
-                .where(
-                    ProcessingJob.status.in_([JobStatus.PENDING, JobStatus.RETRY_SCHEDULED]),
-                    ProcessingJob.available_at <= now,
-                )
-                .order_by(
+                statement.order_by(
                     ProcessingJob.priority.desc(),
                     ProcessingJob.available_at,
                     ProcessingJob.created_at,

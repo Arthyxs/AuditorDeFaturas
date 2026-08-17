@@ -28,9 +28,9 @@ Somente decisões arquiteturais relevantes são registradas aqui. A arquitetura 
 **Status:** ACCEPTED
 **Contexto:** polling, classificação, auditoria, retry e backup precisam sobreviver a reinícios e não podem processar a mesma fatura simultaneamente.
 
-**Decisão:** usar tabela de jobs no PostgreSQL com chave idempotente, estados, tentativas e agendamento. Aquisição usa transação com `FOR UPDATE SKIP LOCKED`; cada execução mantém um advisory lock de sessão por job, liberado automaticamente na desconexão, e a recuperação de lease somente retoma trabalhos cujo lock de execução possa ser adquirido; faturas usam advisory lock ou lock transacional por ID.
+**Decisão:** usar tabela de jobs no PostgreSQL com chave idempotente, estados, tentativas e agendamento. Aquisição usa transação com `FOR UPDATE SKIP LOCKED` e filtra os tipos de job registrados no worker atual, mantendo jobs de milestones/capacidades ainda não instaladas pendentes. Cada execução mantém um advisory lock de sessão por job, liberado automaticamente na desconexão, e a recuperação de lease somente retoma trabalhos cujo lock de execução possa ser adquirido; faturas usam advisory lock ou lock transacional por ID.
 
-**Consequências:** não há dependência de fila externa; a operação é adequada ao volume inicial; um handler ativo não pode ser reexecutado apenas porque seu heartbeat atrasou; cada worker em execução mantém uma conexão PostgreSQL dedicada ao guard do job; queries, índices e recuperação de jobs abandonados precisam de testes de concorrência.
+**Consequências:** não há dependência de fila externa; a operação é adequada ao volume inicial; um handler ativo não pode ser reexecutado apenas porque seu heartbeat atrasou; trabalho downstream pode ser persistido antes da entrega do handler sem ser marcado como falha; cada worker em execução mantém uma conexão PostgreSQL dedicada ao guard do job; queries, índices e recuperação de jobs abandonados precisam de testes de concorrência.
 
 ## ADR-004 — Originais em storage append-only com integridade no banco
 
