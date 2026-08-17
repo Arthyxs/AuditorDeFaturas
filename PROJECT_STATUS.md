@@ -80,7 +80,7 @@ worker deixa jobs de milestones futuros pendentes até existir handler registrad
 - **M13 — Classificação, revisão e movimentação de e-mails:** concluído em 2026-08-17;
   `1097ec90e8c1ad145daf0564180cd326d75bab7d`.
 - **M14 — Entrada canônica, auditoria manual e criação de fatura:** concluído em 2026-08-17;
-  commit técnico pendente de registro.
+  `efc63ed373151d49d5ea028378b86c1d95edf1bc`.
 
 ## Estrutura entregue até M14
 
@@ -216,6 +216,8 @@ worker deixa jobs de milestones futuros pendentes até existir handler registrad
   `02aa13d1532cefe55c83ddb30db97988792257ad`;
 - commit técnico de conclusão do M13 presente localmente e em `origin/main`:
   `1097ec90e8c1ad145daf0564180cd326d75bab7d`;
+- commit técnico de conclusão do M14 presente localmente e em `origin/main`:
+  `efc63ed373151d49d5ea028378b86c1d95edf1bc`;
 - divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
@@ -360,10 +362,10 @@ Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo f
 
 ## Último commit estável
 
-`1097ec90e8c1ad145daf0564180cd326d75bab7d` —
-`feat: add M13 email classification workflow`.
+`efc63ed373151d49d5ea028378b86c1d95edf1bc` —
+`feat: add M14 canonical invoice intake`.
 
-Este é o commit técnico M13, enviado a `origin/main`; M14 ainda não foi iniciado.
+Este é o commit técnico M14, enviado a `origin/main`; M15 ainda não foi iniciado.
 
 ## Próxima ação recomendada
 

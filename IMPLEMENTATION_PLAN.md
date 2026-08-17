@@ -673,7 +673,8 @@ o mesmo `invoice.select_tariffs`. `POST /api/invoices/manual` valida multipart/s
 estrita, RBAC e origem; não fabrica e-mail. Testes PostgreSQL/API cobrem ADMIN/OPERATOR/VIEWER,
 duplicação, parceiro ausente/novo/reutilizado, campos nulos, rejeição de `float`, 250 documentos,
 constraints e equivalência downstream IMAP/manual. Suíte completa: `109 passed, 3 skipped`; Ruff,
-format, mypy, frontend, Alembic, build e Compose passaram. Commit técnico: pendente de registro.
+format, mypy, frontend, Alembic, build e Compose passaram. Commit técnico:
+`efc63ed373151d49d5ea028378b86c1d95edf1bc`.
 
 ### M15 — Seleção semântica de tarifários
 
