@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M09 implementados; M10 é o próximo milestone
+**Estado:** FECHADO E APROVADO — M00–M10 implementados; M11 é o próximo milestone
 **Atualizado em:** 2026-08-17
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -524,6 +524,8 @@ Commit técnico: `de9f7faa1eb41778075f8312f9dcc52f48b10955`.
 
 ### M10 — Provider IMAP, MIME e contexto de thread
 
+**Status:** COMPLETED — concluído em 2026-08-17; M11 desbloqueado.
+
 **Objetivo:** encapsular acesso a e-mail sem acoplar o domínio a IMAP.
 
 **Funcionalidades:** listar/obter mensagens; UID/UIDVALIDITY; cabeçalhos; corpo texto/HTML; anexos; criação/movimentação de pastas; contexto limitado de thread.
@@ -535,6 +537,17 @@ Commit técnico: `de9f7faa1eb41778075f8312f9dcc52f48b10955`.
 **Testes necessários:** servidor IMAP fake/mock; mensagens multipart, encodings e anexos; Message-ID/References; pasta ausente; reconnect; TLS; timeout; limite de histórico.
 
 **Critério objetivo de conclusão:** o contract test do provider recupera e move mensagens representativas sem perder anexos/cabeçalhos e sem depender do assunto.
+
+**Evidência de conclusão:** porta `EmailProvider` independente de IMAP, modelos de transporte
+imutáveis, parser MIME baseado na biblioteca padrão e adapter `IMAPEmailProvider` com UID,
+UIDVALIDITY, `BODY.PEEK`, TLS verificado, timeout, reconnect único para leituras idempotentes,
+criação/movimentação rastreada por `COPYUID` e contexto limitado por quantidade/caracteres. Cinco
+testes fake/mock cobrem multipart texto/HTML, charset, cabeçalhos, anexos, referências, pasta
+ausente, movimento, reconnect e limites. A suíte completa com PostgreSQL real passou com
+`89 passed, 3 skipped`; Ruff, format e mypy passaram; build e Compose ficaram saudáveis. O smoke
+real foi tentado sem alterar a caixa, mas parou antes da autenticação porque o certificado TLS
+interceptado pelo Norton é emitido por uma raiz marcada como não confiável; não houve bypass de
+TLS. Commit técnico: `7517a274c13cc8eb3afd9e1347b54d45f20e18a9`.
 
 ### M11 — Ingestão, fingerprint e deduplicação de e-mails
 

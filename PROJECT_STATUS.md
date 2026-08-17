@@ -2,13 +2,13 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** catálogo de tarifários e execução durável concluídos até M09
-**Macroetapa atual:** C — Tarifários e execução durável
-**Milestone atual:** M09 concluído; M10 está desbloqueado, mas não foi iniciado
+**Fase atual:** entrada por e-mail em implementação; provider IMAP concluído até M10
+**Macroetapa atual:** D — Entradas IMAP/manual e preparação de faturas
+**Milestone atual:** M10 concluído; M11 está desbloqueado, mas não foi iniciado
 
 ## Resumo executivo
 
-M00–M09 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M10 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
@@ -26,6 +26,11 @@ M09 adicionou a fila PostgreSQL durável, scheduler, lease/heartbeat, retry/back
 crash, modo `--once`, lock transacional por fatura e endpoint manual idempotente. O tick operacional
 não implementa IMAP, classificação ou qualquer regra pertencente a M10 e milestones posteriores.
 
+M10 adicionou `EmailProvider`/`IMAPEmailProvider`, identidade UID/UIDVALIDITY, recuperação
+`BODY.PEEK`, parser MIME de cabeçalhos/corpos/anexos, criação e movimento de pastas com `COPYUID`,
+reconnect seguro para leituras, TLS/timeout configuráveis e contexto de thread limitado que combina
+IDs, participantes e assunto, nunca assunto isolado.
+
 ## Milestones concluídos
 
 - **M00 — Aprovação do plano e prontidão do ambiente:** concluído em 2026-08-15.
@@ -41,8 +46,10 @@ não implementa IMAP, classificação ou qualquer regra pertencente a M10 e mile
   `17fbdabdd0d87796fc783e6ae06e8b9888729776`.
 - **M09 — Worker durável, scheduler e locks:** concluído em 2026-08-17;
   `de9f7faa1eb41778075f8312f9dcc52f48b10955`.
+- **M10 — Provider IMAP, MIME e contexto de thread:** concluído em 2026-08-17;
+  `7517a274c13cc8eb3afd9e1347b54d45f20e18a9`.
 
-## Estrutura entregue até M09
+## Estrutura entregue até M10
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -104,11 +111,18 @@ não implementa IMAP, classificação ou qualquer regra pertencente a M10 e mile
 - scheduler por janela configurável, runner contínuo e `python -m app.worker.main --once`;
 - advisory lock transacional e estável por UUID de fatura;
 - endpoint `POST /api/worker/run-now` protegido por origem e RBAC de escrita.
+- porta de e-mail independente do protocolo e modelos imutáveis para localização, mensagem,
+  anexo e contexto de thread;
+- adapter IMAP com TLS implícito/STARTTLS configuráveis, timeout, reconnect de leitura,
+  UID/UIDVALIDITY, `BODY.PEEK`, criação de pasta e movimento com rastreabilidade `COPYUID`;
+- parser MIME para cabeçalhos, texto/HTML, charsets, anexos e bytes RFC originais;
+- resolver de thread limitado por mensagens/caracteres, priorizando Message-ID/In-Reply-To/
+  References e exigindo participantes quando usa assunto normalizado como fallback.
 
 ## Trabalho não iniciado
 
-- M10–M26;
-- IMAP, OpenAI e demais integrações;
+- M11–M26;
+- ingestão/deduplicação, OpenAI e demais integrações;
 - regras financeiras, auditoria, relatórios e golden cases.
 
 ## Estado do repositório e Git
@@ -136,6 +150,8 @@ não implementa IMAP, classificação ou qualquer regra pertencente a M10 e mile
   `17fbdabdd0d87796fc783e6ae06e8b9888729776`;
 - commit técnico de conclusão do M09 presente localmente e em `origin/main`:
   `de9f7faa1eb41778075f8312f9dcc52f48b10955`;
+- commit técnico de conclusão do M10 presente localmente e em `origin/main`:
+  `7517a274c13cc8eb3afd9e1347b54d45f20e18a9`;
 - divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
@@ -208,6 +224,11 @@ não implementa IMAP, classificação ou qualquer regra pertencente a M10 e mile
   crash/recovery, heartbeat, agendamento, lock, `--once`, endpoint, origem e RBAC;
 - worker `--once` na imagem final: **PASS**, saída zero e tick persistido como `SUCCEEDED`;
 - scan pré-commit: **PASS**, sem `.env`, CA, segredos, dados operacionais ou artefatos.
+- aceitação M10: **PASS**, 5 testes fake/mock cobrindo MIME, UID/UIDVALIDITY, anexos,
+  pasta/movimento, reconnect, TLS/timeout e thread limitada;
+- regressão após M10 com PostgreSQL real: **PASS**, `89 passed, 3 skipped`;
+- build Docker após M10: **PASS** com a CA confiável do Windows entregue somente como secret;
+  Compose com `app`, `worker` e `postgres` saudáveis.
 
 ## Bloqueios, riscos e findings
 
@@ -216,13 +237,18 @@ REVIEW-009 (LOW); REVIEW-010 e REVIEW-011 foram corrigidos por serem seguros e d
 relacionados à validação da fundação. Nenhum deles bloqueou a aceitação de M07; a nova camada de
 tarifários não repete a inversão de dependência registrada em REVIEW-005.
 
+O smoke IMAP real do M10 está pendente: o host respondeu com certificado interceptado pelo Norton
+emitido por `Norton Web/Mail Shield Untrusted Root`, e tanto o trust store padrão quanto o bundle
+Certifi recusaram a cadeia antes da autenticação. A verificação TLS não foi desabilitada; nenhuma
+mensagem ou pasta foi alterada. O contrato fake/mock obrigatório passou integralmente.
+
 ## Último commit estável
 
-`de9f7faa1eb41778075f8312f9dcc52f48b10955` — `feat: add M09 durable PostgreSQL worker`
+`7517a274c13cc8eb3afd9e1347b54d45f20e18a9` — `feat: add M10 IMAP email provider`
 
-Este é o commit técnico final do M09, enviado a `origin/main`.
+Este é o commit técnico final do M10, enviado a `origin/main`.
 
 ## Próxima ação recomendada
 
-M10 — provider IMAP, MIME e contexto de thread — está tecnicamente desbloqueado. Não foi iniciado
-nesta sessão, conforme o limite explícito do pedido atual.
+M11 — ingestão, fingerprint e deduplicação de e-mails — está tecnicamente desbloqueado. Deve usar
+o provider M10 e convergir originais para o storage imutável sem iniciar classificação M13.
