@@ -95,7 +95,7 @@ explícitos. PDF digitalizado permanece disponível por render/visão, sem OCR l
 - **M15 — Seleção semântica de tarifários:** concluído em 2026-08-17;
   `361e505053cdd506633168ea10a73cabea2d518b`.
 - **M16 — Ferramentas genéricas de PDF, planilha e imagem:** concluído em 2026-08-17;
-  hash técnico a registrar após o commit e push deste checkpoint.
+  `8833770082bffec788b84002486e903b549f78c6`.
 
 ## Estrutura entregue até M15
 
@@ -402,13 +402,13 @@ Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo f
 
 ## Último commit estável
 
-`361e505053cdd506633168ea10a73cabea2d518b` —
-`feat: add M15 semantic tariff selection` (será substituído pelo hash técnico M16 após push).
+`8833770082bffec788b84002486e903b549f78c6` —
+`feat: add M16 generic document tools`.
 
-Este é o commit técnico M15, enviado a `origin/main`; a implementação M16 está pronta para commit.
+Este é o commit técnico M16, enviado a `origin/main`; M17 ainda não foi iniciado.
 
 ## Próxima ação recomendada
 
-Criar e registrar o checkpoint M16; depois iniciar M17 sequencialmente. A validação IMAP real continua
+Iniciar M17 sequencialmente. A validação IMAP real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir cadeia TLS confiável, e o contrato OpenAI real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir chave segura.

@@ -724,6 +724,7 @@ Fixtures cobrem PDF textual, XLSX com fórmula, CSV CP1252, XLS, PNG, TIFF, corr
 incompatível e limites. Suíte PostgreSQL sem credenciais externas: `120 passed, 3 skipped,
 1 deselected` (a exclusão é o flake ambiental de handle PowerShell no Python 3.14); Ruff,
 format, mypy, Docker build e runtime canônico passaram.
+Commit técnico: `8833770082bffec788b84002486e903b549f78c6`.
 
 ### M17 — Calculadora determinística e regras financeiras comuns
 
