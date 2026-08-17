@@ -27,6 +27,8 @@ def test_valid_settings_are_typed() -> None:
     settings = build_settings(
         app_env="development",
         imap_ssl="false",
+        worker_poll_interval_seconds="1.5",
+        worker_job_lease_seconds="90",
         email_process_batch_size="75",
         upload_max_size_bytes="1048576",
         audit_absolute_tolerance="0.005",
@@ -34,6 +36,8 @@ def test_valid_settings_are_typed() -> None:
 
     assert settings.app_env is AppEnvironment.DEVELOPMENT
     assert settings.imap_ssl is False
+    assert settings.worker_poll_interval_seconds == 1.5
+    assert settings.worker_job_lease_seconds == 90
     assert settings.email_process_batch_size == 75
     assert settings.upload_max_size_bytes == 1048576
     assert settings.audit_absolute_tolerance == Decimal("0.005")
@@ -52,6 +56,8 @@ def test_valid_settings_are_typed() -> None:
         ("database_url", "postgresql+psycopg://user:CHANGE_ME@postgres/db"),
         ("imap_port", "70000"),
         ("email_check_interval_minutes", "0"),
+        ("worker_poll_interval_seconds", "0"),
+        ("worker_job_lease_seconds", "4"),
         ("backup_retention_days", "0"),
         ("upload_max_size_bytes", "0"),
     ],

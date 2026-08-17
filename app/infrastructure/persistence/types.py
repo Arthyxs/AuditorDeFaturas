@@ -12,13 +12,13 @@ class PersistedEnum(StrEnum):
     """Base for string-valued enums stored with database check constraints."""
 
 
-def enum_values(enum_class: type[PersistedEnum]) -> list[str]:
+def enum_values(enum_class: type[StrEnum]) -> list[str]:
     """Persist enum values rather than Python member names."""
     return [member.value for member in enum_class]
 
 
 def string_enum_type(
-    enum_class: type[PersistedEnum], *, name: str, create_constraint: bool = True
+    enum_class: type[StrEnum], *, name: str, create_constraint: bool = True
 ) -> SqlEnum:
     """Build a portable string enum with validation and an explicit constraint."""
     longest_value = max(len(member.value) for member in enum_class)

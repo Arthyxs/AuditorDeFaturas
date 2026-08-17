@@ -7,12 +7,14 @@ from app.infrastructure.persistence.models.base import (
     UpdatedAtMixin,
     UUIDPrimaryKeyMixin,
 )
+from app.infrastructure.persistence.models.jobs import ProcessingJob
 from app.infrastructure.persistence.models.tariffs import TariffFile
 
 __all__ = [
     "AuthSession",
     "Base",
     "CreatedAtMixin",
+    "ProcessingJob",
     "TariffFile",
     "UpdatedAtMixin",
     "UUIDPrimaryKeyMixin",

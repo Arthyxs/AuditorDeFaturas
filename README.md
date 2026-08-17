@@ -2,8 +2,9 @@
 
 Aplicação em construção para auditoria de faturas logísticas. O runtime canônico usa uma imagem
 compartilhada pelos processos `app` e `worker`, acompanhada de PostgreSQL no Docker
-Compose. A fundação, autenticação, storage imutável e API do catálogo de tarifários estão
-operacionais; regras tarifárias e integrações de entrada/auditoria pertencem aos próximos milestones.
+Compose. A fundação, autenticação, storage imutável, catálogo de tarifários e fila durável
+PostgreSQL estão operacionais; regras tarifárias e integrações de entrada/auditoria pertencem aos
+próximos milestones.
 
 ## Requisitos de desenvolvimento
 
@@ -116,6 +117,25 @@ hash completo, histórico de versões, download e indicação de uso quando houv
 relacionadas. Uploads múltiplos mostram andamento e erro por arquivo. Controles de edição,
 ativação e remoção aparecem somente para `ADMIN` e `OPERATOR`; `VIEWER` permanece em leitura.
 
+## Worker durável
+
+O worker usa exclusivamente PostgreSQL: `processing_jobs` possui chave idempotente única, estados
+explícitos, disponibilidade agendada, tentativas, backoff, lease/heartbeat e erro terminal. Dois
+processos disputam trabalho com `FOR UPDATE SKIP LOCKED`, e leases abandonados voltam para retry
+ou falham ao atingir o limite. Locks advisory transacionais por UUID impedem processamento
+simultâneo da mesma fatura.
+
+O modo contínuo respeita `WORKER_POLL_INTERVAL_SECONDS`; a janela do scheduler usa
+`EMAIL_CHECK_INTERVAL_MINUTES`. Uma execução limitada processa no máximo um job:
+
+```powershell
+docker compose run --rm worker python -m app.worker.main --once
+```
+
+`ADMIN` e `OPERATOR` podem enfileirar um tick manual por `POST /api/worker/run-now`; uma chave
+opcional do cliente torna retries HTTP idempotentes. O tick de M09 estabelece somente a fronteira
+durável de agendamento/controle. Polling IMAP e seus handlers pertencem ao M10 e posteriores.
+
 ## Backend
 
 Crie e ative um ambiente virtual e instale o projeto com as dependências de desenvolvimento:
@@ -153,6 +173,6 @@ O build de produção é gerado em `frontend/dist/`, diretório ignorado pelo Gi
 
 ## Limites atuais
 
-Esta etapa não expõe catálogo/API de tarifários, faturas ou auditoria, jobs duráveis, integrações ou
-regras de auditoria. O worker do M02 publica somente o heartbeat de processo
-necessário para validar o runtime; scheduling e jobs começam nos milestones próprios.
+Esta etapa ainda não implementa IMAP, ingestão/classificação de mensagens, faturas, auditoria,
+relatórios nem regras de negócio tarifárias. O worker executa a infraestrutura durável e seus ticks
+operacionais; handlers de integração e auditoria serão adicionados somente nos milestones próprios.

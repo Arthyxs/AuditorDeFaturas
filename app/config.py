@@ -53,6 +53,12 @@ class Settings(BaseSettings):
     imap_folder_review: str = "Revisao"
 
     worker_enabled: bool = True
+    worker_poll_interval_seconds: float = Field(default=2.0, ge=0.1, le=300)
+    worker_heartbeat_interval_seconds: float = Field(default=5.0, ge=0.1, le=300)
+    worker_job_lease_seconds: int = Field(default=60, ge=5, le=86400)
+    worker_max_attempts: int = Field(default=5, ge=1, le=100)
+    worker_retry_base_seconds: int = Field(default=5, ge=1, le=86400)
+    worker_retry_max_seconds: int = Field(default=3600, ge=1, le=604800)
     email_check_interval_minutes: int = Field(default=60, ge=1)
     email_process_batch_size: int = Field(default=50, ge=1)
 
@@ -122,6 +128,7 @@ class Settings(BaseSettings):
             "postgres_user": self.postgres_user,
             "database_configured": bool(self.database_url.get_secret_value()),
             "worker_enabled": self.worker_enabled,
+            "worker_poll_interval_seconds": self.worker_poll_interval_seconds,
             "storage_provider": self.storage_provider,
             "storage_root": str(self.storage_root),
             "upload_max_size_bytes": self.upload_max_size_bytes,

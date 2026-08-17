@@ -2,13 +2,13 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** catálogo, API e frontend de tarifários concluídos até M08
+**Fase atual:** catálogo de tarifários e execução durável concluídos até M09
 **Macroetapa atual:** C — Tarifários e execução durável
-**Milestone atual:** M08 concluído; M09 é o próximo milestone autorizado
+**Milestone atual:** M09 concluído; M10 está desbloqueado, mas não foi iniciado
 
 ## Resumo executivo
 
-M00–M08 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M09 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
@@ -22,8 +22,9 @@ M08 adicionou a gestão React do catálogo com feedback por arquivo, filtros, de
 linhagem e ações condicionadas por papel. O bundle de produção executa os testes frontend durante
 o build e foi carregado no runtime canônico sem erros de console.
 
-Nenhuma regra de negócio, entidade futura, integração ou job foi antecipado.
-O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis permanecem no M09.
+M09 adicionou a fila PostgreSQL durável, scheduler, lease/heartbeat, retry/backoff, recuperação de
+crash, modo `--once`, lock transacional por fatura e endpoint manual idempotente. O tick operacional
+não implementa IMAP, classificação ou qualquer regra pertencente a M10 e milestones posteriores.
 
 ## Milestones concluídos
 
@@ -38,8 +39,10 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   `f3c8538f7d45575557c3ef347723edccd8b8b499`.
 - **M08 — Interface de gestão de tarifários:** concluído em 2026-08-17;
   `17fbdabdd0d87796fc783e6ae06e8b9888729776`.
+- **M09 — Worker durável, scheduler e locks:** concluído em 2026-08-17; commit técnico em
+  fechamento.
 
-## Estrutura entregue até M08
+## Estrutura entregue até M09
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -95,11 +98,16 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - workspace de tarifários responsivo com upload/progresso, filtros, detalhe, download,
   metadata, status, soft delete e histórico de versões;
 - Vitest, Testing Library e jsdom integrados ao build Docker com 6 testes de componentes/cliente.
+- migration `20260817_0004` e fila `processing_jobs` com chave idempotente, estados, prioridade,
+  disponibilidade, tentativas, lease/heartbeat, backoff e erro explícito;
+- aquisição concorrente com `FOR UPDATE SKIP LOCKED` e recuperação transacional de jobs stale;
+- scheduler por janela configurável, runner contínuo e `python -m app.worker.main --once`;
+- advisory lock transacional e estável por UUID de fatura;
+- endpoint `POST /api/worker/run-now` protegido por origem e RBAC de escrita.
 
 ## Trabalho não iniciado
 
-- M09–M26;
-- worker durável, scheduler e locks;
+- M10–M26;
 - IMAP, OpenAI e demais integrações;
 - regras financeiras, auditoria, relatórios e golden cases.
 
@@ -179,21 +187,24 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 
 ## Status de testes, build e execução
 
-- suíte completa com PostgreSQL real: **PASS**, 74 testes; 3 skips condicionais identificados
+- suíte completa com PostgreSQL real: **PASS**, 84 testes; 3 skips condicionais identificados
   (setup Linux e 2 testes Docker de storage); os 2 testes de storage passaram separadamente;
 - regressões de revisão: **PASS** para SPA/API na origem canônica, seis áreas persistentes,
   ACL Windows, modo Linux `0600`, parsers válidos e casos adversariais;
-- Ruff lint e format check: **PASS**, 77 arquivos;
-- mypy estrito: **PASS**, 72 arquivos;
+- Ruff lint e format check: **PASS**, 88 arquivos;
+- mypy estrito: **PASS**, 82 arquivos;
 - frontend ESLint, TypeScript e Vite: **PASS** no stage Docker;
 - Docker build sem cache com CA oficial via secret: **PASS**; nenhum bypass de TLS;
 - Compose config e health: **PASS**, `app`, `worker` e `postgres` saudáveis;
 - raiz `/`: **PASS**, shell React; `/api/health/live`: **PASS**;
-- migration atual após M07: `20260817_0003 (head)`; `alembic check`: **PASS**, sem drift;
+- migration atual após M09: `20260817_0004 (head)`; `alembic check`: **PASS**, sem drift;
 - aceitação M07: **PASS**, 3 testes API cobrindo sete formatos, papéis, integridade,
   paginação, versão, nomes duplicados e soft delete;
 - aceitação M08: **PASS**, 6 testes frontend; ESLint, TypeScript, Vite e inspeção visual do
   bundle canônico sem erro de console;
+- aceitação M09: **PASS**, 8 testes PostgreSQL cobrindo dois workers, duplicidade, retry/backoff,
+  crash/recovery, heartbeat, agendamento, lock, `--once`, endpoint, origem e RBAC;
+- worker `--once` na imagem final: **PASS**, saída zero e tick persistido como `SUCCEEDED`;
 - scan pré-commit: **PASS**, sem `.env`, CA, segredos, dados operacionais ou artefatos.
 
 ## Bloqueios, riscos e findings
@@ -211,5 +222,5 @@ Este é o commit técnico final do M08, enviado a `origin/main`.
 
 ## Próxima ação recomendada
 
-Implementar M09 — worker durável, scheduler e locks — exclusivamente sobre PostgreSQL, sem
-Redis/Celery/broker. Não iniciar M10 antes do checkpoint completo de M09.
+M10 — provider IMAP, MIME e contexto de thread — está tecnicamente desbloqueado. Não foi iniciado
+nesta sessão, conforme o limite explícito do pedido atual.

@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M08 implementados; M09 é o próximo milestone
+**Estado:** FECHADO E APROVADO — M00–M09 implementados; M10 é o próximo milestone
 **Atualizado em:** 2026-08-17
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -498,6 +498,8 @@ Commit técnico: `17fbdabdd0d87796fc783e6ae06e8b9888729776`.
 
 ### M09 — Worker durável, scheduler e locks
 
+**Status:** COMPLETED — concluído e validado em 2026-08-17; M10 desbloqueado, mas não iniciado.
+
 **Objetivo:** executar tarefas idempotentes e recuperáveis sem broker externo.
 
 **Funcionalidades:** fila PostgreSQL; estados/tentativas; backoff; erro explícito; heartbeat; modo contínuo; `--once`; agendamento; lock por fatura; endpoint “Processar agora”.
@@ -509,6 +511,15 @@ Commit técnico: `17fbdabdd0d87796fc783e6ae06e8b9888729776`.
 **Testes necessários:** concorrência com dois workers; retry; crash/recovery; job duplicado; lock; modo único; polling configurável.
 
 **Critério objetivo de conclusão:** dois workers não processam a mesma chave idempotente simultaneamente e um job interrompido pode ser retomado ou falhar explicitamente sem simular sucesso.
+
+**Evidência de conclusão:** migration `20260817_0004` e fila `processing_jobs` com chave
+idempotente única, estados explícitos, disponibilidade agendada, tentativas, backoff exponencial,
+lease/heartbeat e erro redigido. A aquisição usa `FOR UPDATE SKIP LOCKED`; jobs abandonados são
+recuperados para retry ou falha terminal. O runner suporta polling configurável e `--once`, o
+scheduler cria um tick por janela, locks advisory transacionais excluem processamento concorrente
+por UUID de fatura e `POST /api/worker/run-now` exige origem e papel de escrita. Oito testes M09
+passaram em PostgreSQL real, além da suíte completa, Alembic sem drift, gates estáticos, build e
+Compose saudável. Nenhuma integração IMAP ou regra de M10 foi antecipada.
 
 ### M10 — Provider IMAP, MIME e contexto de thread
 

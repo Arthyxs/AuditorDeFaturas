@@ -12,6 +12,7 @@ from app import __version__
 from app.api.routes.auth import router as auth_router
 from app.api.routes.health import router as health_router
 from app.api.routes.tariffs import router as tariffs_router
+from app.api.routes.worker import router as worker_router
 from app.config import Settings, get_settings
 from app.infrastructure.persistence.session import create_database_engine, create_session_factory
 from app.infrastructure.storage import LocalStorageProvider
@@ -50,6 +51,7 @@ def create_app(
     application.include_router(auth_router)
     application.include_router(health_router)
     application.include_router(tariffs_router)
+    application.include_router(worker_router)
     static_directory = (
         Path(__file__).resolve().parents[1] / "frontend" / "dist"
         if frontend_directory is None
