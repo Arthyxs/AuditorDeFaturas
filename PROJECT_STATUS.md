@@ -40,6 +40,12 @@ M12 adicionou portas de IA substituíveis, router provider/modelo, adapter OpenA
 de infraestrutura, Responses API com Structured Outputs e tool loop controlado, prompts versionados,
 provider fake e telemetria persistente com preços versionados e cálculo monetário por `Decimal`.
 
+A revisão independente mais recente de M07–M12 abriu REVIEW-012 (HIGH) e REVIEW-013–015
+(MEDIUM). A remediação serializa vigências de preço por provider/modelo, preserva partes MIME
+inline sem filename, tira I/O durável do transaction/lock de ingestão e impede recuperação de lease
+enquanto o handler mantém seu lock de execução vivo. Também foram fechados os findings seguros
+carregados REVIEW-006 e REVIEW-008. M13 não foi iniciado.
+
 ## Milestones concluídos
 
 - **M00 — Aprovação do plano e prontidão do ambiente:** concluído em 2026-08-15.
@@ -181,6 +187,8 @@ provider fake e telemetria persistente com preços versionados e cálculo monet�
   `7517a274c13cc8eb3afd9e1347b54d45f20e18a9`;
 - commit técnico de conclusão do M11 presente localmente e em `origin/main`:
   `b7b82f98645fabefc09648463e43f2c63f3a514c`;
+- commit técnico da remediação REVIEW-006/008/012–015 presente localmente e em `origin/main`:
+  `02aa13d1532cefe55c83ddb30db97988792257ad`;
 - divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
@@ -234,6 +242,20 @@ provider fake e telemetria persistente com preços versionados e cálculo monet�
 
 ## Status de testes, build e execução
 
+- remediação REVIEW-006/008/012–015: **PASS**;
+- suíte completa em container Python 3.12 com PostgreSQL real e sem IMAP/OpenAI reais:
+  **PASS**, `105 passed, 3 skipped`;
+- regressões novas: concorrência de vigência de preços, MIME inline sem filename/fingerprint,
+  compensação de blobs duplicados, lock de execução durante lease stale e contrato completo de
+  listagem/hash/referência de storage: **PASS**;
+- Ruff lint/format em 106 arquivos e mypy estrito em 106 arquivos: **PASS**;
+- setup Linux sobre checkout Windows/CRLF e path com espaços: **PASS** após normalização de CRLF;
+- Alembic `20260817_0006 (head)` e `alembic check`: **PASS**, sem drift;
+- Docker build limpo sem cache com CA oficial via BuildKit secret: **PASS**; frontend ESLint,
+  6 testes Vitest e build Vite: **PASS**;
+- Compose recriado: `app`, `worker` e `postgres` saudáveis; app publicado somente em
+  `127.0.0.1:8000`; `/` e `/api/health/live`: **PASS**; worker `--once`: **PASS**.
+
 - suíte completa com PostgreSQL real: **PASS**, 84 testes; 3 skips condicionais identificados
   (setup Linux e 2 testes Docker de storage); os 2 testes de storage passaram separadamente;
 - regressões de revisão: **PASS** para SPA/API na origem canônica, seis áreas persistentes,
@@ -275,10 +297,11 @@ provider fake e telemetria persistente com preços versionados e cálculo monet�
 
 ## Bloqueios, riscos e findings
 
-Não há finding CRITICAL ou HIGH aberto. Permanecem abertos REVIEW-005–008 (MEDIUM) e
-REVIEW-009 (LOW); REVIEW-010 e REVIEW-011 foram corrigidos por serem seguros e diretamente
-relacionados à validação da fundação. Nenhum deles bloqueou a aceitação de M07; a nova camada de
-tarifários não repete a inversão de dependência registrada em REVIEW-005.
+Não há finding CRITICAL ou HIGH aberto. REVIEW-006, REVIEW-008 e REVIEW-012–015 foram corrigidos
+e revalidados nesta remediação. Permanecem abertos REVIEW-005 e REVIEW-007 (MEDIUM), além de
+REVIEW-009, REVIEW-016 e REVIEW-017 (LOW). REVIEW-005 exige refatoração coordenada da fronteira de
+autenticação, e REVIEW-007 exige definir a invalidação do token entre banco, restore e storage sem
+introduzir um reset inseguro; ambos permanecem explicitamente registrados, sem mudança silenciosa.
 
 O smoke IMAP real do M10 está pendente: o host respondeu com certificado interceptado pelo Norton
 emitido por `Norton Web/Mail Shield Untrusted Root`, e tanto o trust store padrão quanto o bundle
@@ -290,12 +313,15 @@ Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo f
 
 ## Último commit estável
 
-`36b72678494c056772d7e2a351d1cd93226d194a` — `feat: add M12 AI provider foundation and telemetry`
+`02aa13d1532cefe55c83ddb30db97988792257ad` —
+`fix: remediate M07-M12 review findings`.
 
-Este é o commit técnico final do M12, enviado a `origin/main`.
+Este é o commit técnico da remediação, enviado a `origin/main`; M13 não foi iniciado.
 
 ## Próxima ação recomendada
 
-M13 — classificação, revisão e movimentação de e-mails — está tecnicamente desbloqueado, mas não
-foi iniciado por limite explícito desta execução. Antes de implementá-lo, concluir a validação IMAP
-real com cadeia TLS confiável e executar contrato OpenAI mínimo somente quando houver chave segura.
+Resolver REVIEW-005 e REVIEW-007 em uma remediação dedicada da fundação de autenticação. M13 —
+classificação, revisão e movimentação de e-mails — continua tecnicamente desbloqueado, mas não foi
+iniciado por limite explícito desta execução. A validação IMAP real continua
+`DEFERRED_EXTERNAL_VALIDATION` até existir cadeia TLS confiável, e o contrato OpenAI real continua
+`DEFERRED_EXTERNAL_VALIDATION` até existir chave segura.

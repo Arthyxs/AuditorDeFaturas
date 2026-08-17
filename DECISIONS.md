@@ -1,7 +1,7 @@
 # InvoiceAuditor — Decisões Arquiteturais
 
 **Estado do documento:** decisões aceitas
-**Atualizado em:** 2026-08-16
+**Atualizado em:** 2026-08-17
 
 Somente decisões arquiteturais relevantes são registradas aqui. A arquitetura geral e as decisões abaixo foram aprovadas pelo usuário em 2026-08-15. A especificação v3.0 permanece autoridade superior, acrescida dos requisitos explicitamente aprovados para auditoria manual e homologação.
 
@@ -28,16 +28,16 @@ Somente decisões arquiteturais relevantes são registradas aqui. A arquitetura 
 **Status:** ACCEPTED
 **Contexto:** polling, classificação, auditoria, retry e backup precisam sobreviver a reinícios e não podem processar a mesma fatura simultaneamente.
 
-**Decisão:** usar tabela de jobs no PostgreSQL com chave idempotente, estados, tentativas e agendamento. Aquisição usa transação com `FOR UPDATE SKIP LOCKED`; faturas usam advisory lock ou lock transacional por ID.
+**Decisão:** usar tabela de jobs no PostgreSQL com chave idempotente, estados, tentativas e agendamento. Aquisição usa transação com `FOR UPDATE SKIP LOCKED`; cada execução mantém um advisory lock de sessão por job, liberado automaticamente na desconexão, e a recuperação de lease somente retoma trabalhos cujo lock de execução possa ser adquirido; faturas usam advisory lock ou lock transacional por ID.
 
-**Consequências:** não há dependência de fila externa; a operação é adequada ao volume inicial; queries, índices e recuperação de jobs abandonados precisam de testes de concorrência.
+**Consequências:** não há dependência de fila externa; a operação é adequada ao volume inicial; um handler ativo não pode ser reexecutado apenas porque seu heartbeat atrasou; cada worker em execução mantém uma conexão PostgreSQL dedicada ao guard do job; queries, índices e recuperação de jobs abandonados precisam de testes de concorrência.
 
 ## ADR-004 — Originais em storage append-only com integridade no banco
 
 **Status:** ACCEPTED
 **Contexto:** e-mails, anexos, tarifários e relatórios devem ser imutáveis, persistentes e migráveis entre Windows e Linux.
 
-**Decisão:** `LocalStorageProvider` grava cada blob e seu sidecar mínimo de integridade em um diretório temporário no mesmo filesystem e publica o conjunto por rename atômico em `data/`, com UUID/nome interno, SHA-256, tamanho e metadata posteriormente referenciável no PostgreSQL. A leitura revalida tamanho e hash antes de entregar o mesmo descritor. Alterações criam nova versão; soft delete altera visibilidade no banco, não remove o blob referenciado. Exclusão física é negada por padrão e exige motivo explícito e confirmação de que referências foram verificadas.
+**Decisão:** `LocalStorageProvider` grava cada blob e seu sidecar mínimo de integridade em um diretório temporário no mesmo filesystem e publica o conjunto por rename atômico em `data/`, com UUID/nome interno, SHA-256, tamanho e metadata posteriormente referenciável no PostgreSQL. A porta fornece listagem paginada por área/chave, verificação de digest sob demanda e referência opaca, sem expor `Path` local. A leitura revalida tamanho e hash antes de entregar o mesmo descritor. Alterações criam nova versão; soft delete altera visibilidade no banco, não remove o blob referenciado. Exclusão física é negada por padrão e exige motivo explícito e confirmação de que referências foram verificadas.
 
 **Consequências:** integridade e rastreabilidade são verificáveis; backup precisa manter consistência entre banco e filesystem; cresce o uso de disco, administrado por retenção apenas de temporários/backups, nunca de originais.
 

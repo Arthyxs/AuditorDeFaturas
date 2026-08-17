@@ -49,7 +49,8 @@ docker compose up -d --build
 docker compose ps
 ```
 
-O processo web e o bundle React ficam disponíveis em `http://localhost:8000`; o liveness está em
+O processo web é publicado somente no loopback por padrão, e o bundle React fica disponível em
+`http://localhost:8000`; o liveness está em
 `http://localhost:8000/api/health/live`. Os três serviços possuem health checks. O banco
 usa volume nomeado e todo o `STORAGE_ROOT` usa um único bind mount sob `data/`, que é
 ignorado pelo Git.
@@ -122,8 +123,10 @@ ativação e remoção aparecem somente para `ADMIN` e `OPERATOR`; `VIEWER` perm
 O worker usa exclusivamente PostgreSQL: `processing_jobs` possui chave idempotente única, estados
 explícitos, disponibilidade agendada, tentativas, backoff, lease/heartbeat e erro terminal. Dois
 processos disputam trabalho com `FOR UPDATE SKIP LOCKED`, e leases abandonados voltam para retry
-ou falham ao atingir o limite. Locks advisory transacionais por UUID impedem processamento
-simultâneo da mesma fatura.
+ou falham ao atingir o limite. Cada handler mantém ainda um lock advisory de sessão liberado pelo
+PostgreSQL quando o processo desconecta; a recuperação de lease não pode reexecutar concorrentemente
+um handler ainda ativo. Locks advisory transacionais por UUID impedem processamento simultâneo da
+mesma fatura.
 
 O modo contínuo respeita `WORKER_POLL_INTERVAL_SECONDS`; a janela do scheduler usa
 `EMAIL_CHECK_INTERVAL_MINUTES`. Uma execução limitada processa no máximo um job:
@@ -173,6 +176,7 @@ O build de produção é gerado em `frontend/dist/`, diretório ignorado pelo Gi
 
 ## Limites atuais
 
-Esta etapa ainda não implementa IMAP, ingestão/classificação de mensagens, faturas, auditoria,
-relatórios nem regras de negócio tarifárias. O worker executa a infraestrutura durável e seus ticks
-operacionais; handlers de integração e auditoria serão adicionados somente nos milestones próprios.
+As fundações de IMAP, MIME, contexto de thread, ingestão/deduplicação de mensagens e provider de IA
+estão implementadas até M12. A etapa atual ainda não implementa classificação/movimentação de
+e-mails, criação de faturas, auditoria, relatórios nem regras de negócio tarifárias; essas
+capacidades começam em M13 e permanecem fora desta remediação.

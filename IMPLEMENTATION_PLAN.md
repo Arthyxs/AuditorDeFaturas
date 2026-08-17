@@ -604,6 +604,14 @@ cálculo com `Decimal`. Suíte completa: `101 passed, 3 skipped`; Ruff, format, 
 porque não há API key configurada no `.env`. Commit técnico:
 `36b72678494c056772d7e2a351d1cd93226d194a`.
 
+**Remediação de revisão 2026-08-17:** REVIEW-012 passou a serializar no PostgreSQL toda escrita
+de vigência para o mesmo provider/modelo antes do teste de sobreposição; duas inserções concorrentes
+e sobrepostas produzem exatamente um registro e uma rejeição. REVIEW-013–015 também foram fechados
+sem iniciar M13: partes MIME inline são preservadas/fingerprintadas, storage deixa de executar sob
+o lock transacional de ingestão, e recovery de lease respeita o lock de sessão do handler ativo.
+Suíte completa: `105 passed, 3 skipped`; Ruff, format, mypy, Alembic, build limpo, frontend e Compose
+passaram. Commit da remediação: `02aa13d1532cefe55c83ddb30db97988792257ad`.
+
 ### M13 — Classificação, revisão e movimentação de e-mails
 
 **Objetivo:** classificar mensagens com Luna e movê-las de forma segura.
