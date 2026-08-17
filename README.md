@@ -176,8 +176,10 @@ O build de produção é gerado em `frontend/dist/`, diretório ignorado pelo Gi
 
 ## Limites atuais
 
-IMAP, classificação/movimentação, entrada canônica e seleção semântica estão implementados até M15.
+IMAP, classificação/movimentação, entrada canônica, seleção semântica e ferramentas documentais
+genéricas estão implementados até M16.
 ADMIN/OPERATOR podem enviar uma fatura manual por `POST /api/invoices/manual`; o canal manual e o
 IMAP preservam originais/origem e usam o mesmo pipeline sem e-mail fictício. A integração de IA
-continua testável com provider fake. Ferramentas documentais, auditoria e relatórios começam em M16,
-que não foi iniciado neste checkpoint.
+continua testável com provider fake. As ferramentas de PDF, planilha e imagem operam somente sobre
+originais verificados e retornam coordenadas reproduzíveis; cálculo, auditoria e relatórios começam
+em M17.

@@ -2,13 +2,13 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** seleção semântica de tarifários concluída até M15
-**Macroetapa atual:** D — Entradas IMAP/manual e preparação de faturas
-**Milestone atual:** M15 concluído; M16 não iniciado por instrução explícita
+**Fase atual:** ferramentas documentais genéricas concluídas até M16
+**Macroetapa atual:** E — Motor auditável e resultados financeiros
+**Milestone atual:** M16 concluído; M17 não iniciado neste checkpoint
 
 ## Resumo executivo
 
-M00–M15 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M16 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
@@ -61,6 +61,12 @@ Terra configurável e provider fake nos testes. A seleção múltipla persiste c
 somente os originais escolhidos; ausência de candidato e baixa confiança mantêm a fatura `PENDING`
 com pendência explícita. Entradas IMAP/manual equivalentes produzem o mesmo contexto semântico.
 
+M16 adicionou ferramentas documentais genéricas, tipadas e limitadas sobre originais verificados
+por SHA-256. PDF retorna página e bbox; planilhas retornam aba/range/célula e fórmulas sem executá-las;
+imagens retornam metadata e preview com pixel box. PDF textual, XLSX, XLS, CSV/TSV, PNG/JPEG/TIFF
+são suportados sem parser por parceiro; corrupção, formato incompatível e excesso falham com códigos
+explícitos. PDF digitalizado permanece disponível por render/visão, sem OCR local inventado.
+
 ## Milestones concluídos
 
 - **M00 — Aprovação do plano e prontidão do ambiente:** concluído em 2026-08-15.
@@ -88,6 +94,8 @@ com pendência explícita. Entradas IMAP/manual equivalentes produzem o mesmo co
   `efc63ed373151d49d5ea028378b86c1d95edf1bc`.
 - **M15 — Seleção semântica de tarifários:** concluído em 2026-08-17;
   `361e505053cdd506633168ea10a73cabea2d518b`.
+- **M16 — Ferramentas genéricas de PDF, planilha e imagem:** concluído em 2026-08-17;
+  hash técnico a registrar após o commit e push deste checkpoint.
 
 ## Estrutura entregue até M15
 
@@ -190,8 +198,7 @@ com pendência explícita. Entradas IMAP/manual equivalentes produzem o mesmo co
 
 ## Trabalho não iniciado
 
-- M16–M26;
-- ferramentas documentais, auditoria e demais integrações de negócio baseadas em IA;
+- M17–M26;
 - regras financeiras, auditoria, relatórios e golden cases.
 
 ## Estado do repositório e Git
@@ -383,15 +390,25 @@ mensagem ou pasta foi alterada. O contrato fake/mock obrigatório passou integra
 O contrato real OpenAI do M12 está pendente porque `OPENAI_API_KEY` não está configurada no `.env`.
 Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo foi adicionado ao Git.
 
+## Validação M16
+
+- ferramentas documentais: **PASS**, 8 testes cobrindo PDF textual e render, coordenadas page/bbox,
+  XLSX com fórmula não executada, CSV CP1252, XLS, PNG, TIFF e falhas/limites explícitos;
+- regressão com PostgreSQL descartável e sem IMAP/OpenAI reais: **PASS**, `120 passed, 3 skipped,
+  1 deselected`; o teste PowerShell excluído tem flake ambiental documentado no Python 3.14;
+- Ruff lint/format e mypy estrito em 137 arquivos: **PASS**;
+- Docker build Python 3.12 com PyMuPDF, frontend gates, Compose e health: **PASS**;
+- originais permanecem no storage append-only e cada evidência carrega SHA-256 reproduzível.
+
 ## Último commit estável
 
 `361e505053cdd506633168ea10a73cabea2d518b` —
-`feat: add M15 semantic tariff selection`.
+`feat: add M15 semantic tariff selection` (será substituído pelo hash técnico M16 após push).
 
-Este é o commit técnico M15, enviado a `origin/main`; M16 não foi iniciado.
+Este é o commit técnico M15, enviado a `origin/main`; a implementação M16 está pronta para commit.
 
 ## Próxima ação recomendada
 
-Encerrar no checkpoint M15 conforme instrução explícita; não iniciar M16. A validação IMAP real continua
+Criar e registrar o checkpoint M16; depois iniciar M17 sequencialmente. A validação IMAP real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir cadeia TLS confiável, e o contrato OpenAI real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir chave segura.

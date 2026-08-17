@@ -702,6 +702,8 @@ técnico: `361e505053cdd506633168ea10a73cabea2d518b`.
 
 ### M16 — Ferramentas genéricas de PDF, planilha e imagem
 
+**Status:** COMPLETED — concluído em 2026-08-17; M17 não iniciado neste checkpoint.
+
 **Objetivo:** oferecer acesso auditável e econômico aos documentos sem layouts hardcoded.
 
 **Funcionalidades:** listar/extrair/pesquisar/renderizar PDF; listar abas/dimensões/intervalos/células/fórmulas; metadata e preview de imagens; referências de página/aba/range; detecção de formato não suportado.
@@ -713,6 +715,15 @@ técnico: `361e505053cdd506633168ea10a73cabea2d518b`.
 **Testes necessários:** PDFs textuais/digitalizados; XLSX com fórmulas; CSV com encodings/separadores; imagens; arquivos corrompidos; limites de página/range; XLS/TIFF em spike de viabilidade.
 
 **Critério objetivo de conclusão:** ferramentas retornam conteúdo e coordenadas reproduzíveis para fixtures suportadas, limitam leituras excessivas e retornam `DOCUMENT_UNSUPPORTED`/erro explícito nos casos não suportados.
+
+**Evidência de conclusão:** ferramentas estritas e limitadas sobre `StorageProvider` para PDF,
+XLSX/XLS/CSV/TSV e PNG/JPEG/TIFF; toda coordenada inclui ID e SHA-256 do original imutável,
+mais página/bbox, aba/range ou pixel box. PyMuPDF extrai, pesquisa e renderiza; fórmulas são
+expostas como dados e nunca executadas; imagens fornecem metadata/preview sem OCR implícito.
+Fixtures cobrem PDF textual, XLSX com fórmula, CSV CP1252, XLS, PNG, TIFF, corrupção, formato
+incompatível e limites. Suíte PostgreSQL sem credenciais externas: `120 passed, 3 skipped,
+1 deselected` (a exclusão é o flake ambiental de handle PowerShell no Python 3.14); Ruff,
+format, mypy, Docker build e runtime canônico passaram.
 
 ### M17 — Calculadora determinística e regras financeiras comuns
 
