@@ -1,0 +1,1 @@
+Return a concise structured health result for the configured AI provider. Do not call tools.

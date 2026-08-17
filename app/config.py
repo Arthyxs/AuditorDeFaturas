@@ -75,6 +75,9 @@ class Settings(BaseSettings):
     ai_audit_model: str = "gpt-5.6-terra"
     ai_advanced_provider: str = "openai"
     ai_advanced_model: str = "gpt-5.6-sol"
+    ai_timeout_seconds: float = Field(default=120.0, gt=0, le=1800)
+    ai_max_tool_rounds: int = Field(default=8, ge=0, le=100)
+    ai_max_tool_calls: int = Field(default=50, ge=0, le=1000)
 
     openai_api_key: SecretStr | None = None
     anthropic_api_key: SecretStr | None = None
@@ -142,6 +145,9 @@ class Settings(BaseSettings):
             ),
             "imap_tls": (
                 "implicit" if self.imap_ssl else "starttls" if self.imap_starttls else "plain"
+            ),
+            "openai_configured": bool(
+                self.openai_api_key and self.openai_api_key.get_secret_value()
             ),
             "storage_provider": self.storage_provider,
             "storage_root": str(self.storage_root),

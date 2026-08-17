@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Annotated, cast
+from typing import Annotated
 from uuid import uuid4
 
 import pytest
@@ -143,18 +143,15 @@ def test_concurrent_bootstrap_creates_exactly_one_admin(postgres_database_url: s
         application = app_for(postgres_database_url)
         try:
             with TestClient(application, base_url=ORIGIN) as client:
-                return cast(
-                    int,
-                    client.post(
-                        "/api/auth/bootstrap",
-                        headers={"Origin": ORIGIN},
-                        json={
-                            "username": username,
-                            "password": TEST_PASSWORD,
-                            "bootstrap_token": BOOTSTRAP_TOKEN,
-                        },
-                    ).status_code,
-                )
+                return client.post(
+                    "/api/auth/bootstrap",
+                    headers={"Origin": ORIGIN},
+                    json={
+                        "username": username,
+                        "password": TEST_PASSWORD,
+                        "bootstrap_token": BOOTSTRAP_TOKEN,
+                    },
+                ).status_code
         finally:
             application.state.database_engine.dispose()
 
