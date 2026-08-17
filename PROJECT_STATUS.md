@@ -2,13 +2,13 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** entrada por e-mail em implementação; provider IMAP concluído até M10
+**Fase atual:** entrada por e-mail em implementação; ingestão idempotente concluída até M11
 **Macroetapa atual:** D — Entradas IMAP/manual e preparação de faturas
-**Milestone atual:** M10 concluído; M11 está desbloqueado, mas não foi iniciado
+**Milestone atual:** M11 concluído; M12 está desbloqueado, mas não foi iniciado
 
 ## Resumo executivo
 
-M00–M10 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M11 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
@@ -31,6 +31,11 @@ M10 adicionou `EmailProvider`/`IMAPEmailProvider`, identidade UID/UIDVALIDITY, r
 reconnect seguro para leituras, TLS/timeout configuráveis e contexto de thread limitado que combina
 IDs, participantes e assunto, nunca assunto isolado.
 
+M11 adicionou as tabelas de conta/mensagem/anexo, fingerprint canônico, server key independente de
+pasta, preservação append-only do RFC original e anexos, locks transacionais de deduplicação e job
+de ingestão. Recoleta, movimento e corridas convergem para uma única mensagem e um único conjunto
+de blobs recuperáveis por hash.
+
 ## Milestones concluídos
 
 - **M00 — Aprovação do plano e prontidão do ambiente:** concluído em 2026-08-15.
@@ -48,8 +53,10 @@ IDs, participantes e assunto, nunca assunto isolado.
   `de9f7faa1eb41778075f8312f9dcc52f48b10955`.
 - **M10 — Provider IMAP, MIME e contexto de thread:** concluído em 2026-08-17;
   `7517a274c13cc8eb3afd9e1347b54d45f20e18a9`.
+- **M11 — Ingestão, fingerprint e deduplicação de e-mails:** concluído em 2026-08-17;
+  `b7b82f98645fabefc09648463e43f2c63f3a514c`.
 
-## Estrutura entregue até M10
+## Estrutura entregue até M11
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -118,11 +125,18 @@ IDs, participantes e assunto, nunca assunto isolado.
 - parser MIME para cabeçalhos, texto/HTML, charsets, anexos e bytes RFC originais;
 - resolver de thread limitado por mensagens/caracteres, priorizando Message-ID/In-Reply-To/
   References e exigindo participantes quando usa assunto normalizado como fallback.
+- migration/tabelas `mail_accounts`, `mail_messages` e `mail_attachments` com constraints únicas,
+  metadata MIME e referências imutáveis de storage;
+- server key `account + UIDVALIDITY + UID` sem pasta e fingerprint SHA-256 de JSON canônico;
+- normalização Unicode, remetente/assunto/Message-ID, datas UTC/ambíguas, corpo e anexos ordenados;
+- serviço/repository de ingestão com advisory locks transacionais antes da criação de blobs;
+- operação de storage para originais opacos e limitados, mantendo uploads documentais sob parsing;
+- job `email.ingest` com payload validado e testes de concorrência/idempotência PostgreSQL.
 
 ## Trabalho não iniciado
 
-- M11–M26;
-- ingestão/deduplicação, OpenAI e demais integrações;
+- M12–M26;
+- OpenAI e demais integrações;
 - regras financeiras, auditoria, relatórios e golden cases.
 
 ## Estado do repositório e Git
@@ -152,6 +166,8 @@ IDs, participantes e assunto, nunca assunto isolado.
   `de9f7faa1eb41778075f8312f9dcc52f48b10955`;
 - commit técnico de conclusão do M10 presente localmente e em `origin/main`:
   `7517a274c13cc8eb3afd9e1347b54d45f20e18a9`;
+- commit técnico de conclusão do M11 presente localmente e em `origin/main`:
+  `b7b82f98645fabefc09648463e43f2c63f3a514c`;
 - divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
@@ -229,6 +245,12 @@ IDs, participantes e assunto, nunca assunto isolado.
 - regressão após M10 com PostgreSQL real: **PASS**, `89 passed, 3 skipped`;
 - build Docker após M10: **PASS** com a CA confiável do Windows entregue somente como secret;
   Compose com `app`, `worker` e `postgres` saudáveis.
+- aceitação M11: **PASS**, vetores de fingerprint e 2 testes PostgreSQL de recoleta, movimento,
+  ordem de anexos, recuperação do original e corrida por conteúdo;
+- regressão final após M11: **PASS**, `95 passed, 3 skipped`; o único flake de handle Windows no
+  teste de setup passou isolado e na repetição completa;
+- migration `20260817_0005 (head)`, upgrade/downgrade e `alembic check`: **PASS**, sem drift;
+- build Docker M11 e Compose: **PASS**, três serviços saudáveis.
 
 ## Bloqueios, riscos e findings
 
@@ -244,11 +266,11 @@ mensagem ou pasta foi alterada. O contrato fake/mock obrigatório passou integra
 
 ## Último commit estável
 
-`7517a274c13cc8eb3afd9e1347b54d45f20e18a9` — `feat: add M10 IMAP email provider`
+`b7b82f98645fabefc09648463e43f2c63f3a514c` — `feat: add M11 email ingestion and deduplication`
 
-Este é o commit técnico final do M10, enviado a `origin/main`.
+Este é o commit técnico final do M11, enviado a `origin/main`.
 
 ## Próxima ação recomendada
 
-M11 — ingestão, fingerprint e deduplicação de e-mails — está tecnicamente desbloqueado. Deve usar
-o provider M10 e convergir originais para o storage imutável sem iniciar classificação M13.
+M12 — fundação do provider de IA e telemetria — está tecnicamente desbloqueado. Deve manter o SDK
+OpenAI exclusivamente no adapter e não iniciar classificação M13.

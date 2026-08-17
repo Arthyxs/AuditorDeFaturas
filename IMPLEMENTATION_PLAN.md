@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M10 implementados; M11 é o próximo milestone
+**Estado:** FECHADO E APROVADO — M00–M11 implementados; M12 é o próximo milestone
 **Atualizado em:** 2026-08-17
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -551,6 +551,8 @@ TLS. Commit técnico: `7517a274c13cc8eb3afd9e1347b54d45f20e18a9`.
 
 ### M11 — Ingestão, fingerprint e deduplicação de e-mails
 
+**Status:** COMPLETED — concluído em 2026-08-17; M12 desbloqueado.
+
 **Objetivo:** persistir originais exatamente uma vez.
 
 **Funcionalidades:** `mail_accounts`, `mail_messages`, `mail_attachments`; server key; fingerprint canônico; normalização; armazenamento do e-mail bruto e anexos; idempotência após movimento.
@@ -562,6 +564,17 @@ TLS. Commit técnico: `7517a274c13cc8eb3afd9e1347b54d45f20e18a9`.
 **Testes necessários:** vetores unitários de fingerprint; duplicação por UID; duplicação por conteúdo após mover; Message-ID ausente; anexos em ordem diferente; corrida de ingestão.
 
 **Critério objetivo de conclusão:** repetir a coleta ou mover a mensagem não duplica mensagem, anexo ou blob, e o original continua recuperável pelo hash.
+
+**Evidência de conclusão:** migration `20260817_0005` cria `mail_accounts`, `mail_messages` e
+`mail_attachments`, com chaves únicas para identidade do servidor, fingerprint, posições MIME e
+referências de storage. O fingerprint usa JSON canônico, normalização Unicode/UTC, hash do corpo e
+hashes de anexos ordenados; a server key exclui a pasta. O serviço de ingestão usa advisory locks
+transacionais para serializar tanto server key quanto conteúdo antes de criar blobs, preserva o
+RFC `.eml` e cada anexo em storage append-only e possui comando de job durável validado. Vetores
+unitários e testes PostgreSQL cobrem UID repetido, Message-ID ausente, anexos invertidos, movimento,
+recuperação por hash e corrida com identidades de servidor diferentes para o mesmo conteúdo. Suíte
+completa: `95 passed, 3 skipped`; Ruff, format, mypy, upgrade/downgrade, `alembic check`, build e
+Compose passaram. Commit técnico: `b7b82f98645fabefc09648463e43f2c63f3a514c`.
 
 ### M12 — Fundação do provider de IA e telemetria
 
