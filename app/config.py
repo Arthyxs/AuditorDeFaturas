@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     imap_host: str = ""
     imap_port: int = Field(default=993, ge=1, le=65535)
     imap_ssl: bool = True
+    imap_starttls: bool = False
     imap_user: str = ""
     imap_password: SecretStr | None = None
     imap_inbox: str = "INBOX"
@@ -51,6 +52,10 @@ class Settings(BaseSettings):
     imap_folder_due_notices: str = "Avisos"
     imap_folder_general: str = "Gerais"
     imap_folder_review: str = "Revisao"
+    imap_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+    imap_thread_scan_limit: int = Field(default=100, ge=1, le=1000)
+    email_thread_max_messages: int = Field(default=10, ge=1, le=100)
+    email_thread_max_characters: int = Field(default=50000, ge=1, le=1000000)
 
     worker_enabled: bool = True
     worker_poll_interval_seconds: float = Field(default=2.0, ge=0.1, le=300)
@@ -129,6 +134,15 @@ class Settings(BaseSettings):
             "database_configured": bool(self.database_url.get_secret_value()),
             "worker_enabled": self.worker_enabled,
             "worker_poll_interval_seconds": self.worker_poll_interval_seconds,
+            "imap_configured": bool(
+                self.imap_host
+                and self.imap_user
+                and self.imap_password
+                and self.imap_password.get_secret_value()
+            ),
+            "imap_tls": (
+                "implicit" if self.imap_ssl else "starttls" if self.imap_starttls else "plain"
+            ),
             "storage_provider": self.storage_provider,
             "storage_root": str(self.storage_root),
             "upload_max_size_bytes": self.upload_max_size_bytes,
