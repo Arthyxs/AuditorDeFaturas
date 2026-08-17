@@ -2,13 +2,13 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** ferramentas documentais genéricas concluídas até M16
+**Fase atual:** motor financeiro determinístico concluído até M17
 **Macroetapa atual:** E — Motor auditável e resultados financeiros
-**Milestone atual:** M16 concluído; M17 não iniciado neste checkpoint
+**Milestone atual:** M17 concluído; M18 não iniciado neste checkpoint
 
 ## Resumo executivo
 
-M00–M16 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M17 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
@@ -67,6 +67,11 @@ imagens retornam metadata e preview com pixel box. PDF textual, XLSX, XLS, CSV/T
 são suportados sem parser por parceiro; corrupção, formato incompatível e excesso falham com códigos
 explícitos. PDF digitalizado permanece disponível por render/visão, sem OCR local inventado.
 
+M17 adicionou DSL financeira declarativa allowlisted com literais textuais e `Decimal`, trace
+determinístico e limites de complexidade. Nenhum código arbitrário é avaliado. O mesmo módulo
+implementa tolerância absoluta/percentual, consolidação conservadora de estados e margem bruta,
+mantendo valores brutos explícitos e sem converter dinheiro por `float`.
+
 ## Milestones concluídos
 
 - **M00 — Aprovação do plano e prontidão do ambiente:** concluído em 2026-08-15.
@@ -96,6 +101,8 @@ explícitos. PDF digitalizado permanece disponível por render/visão, sem OCR l
   `361e505053cdd506633168ea10a73cabea2d518b`.
 - **M16 — Ferramentas genéricas de PDF, planilha e imagem:** concluído em 2026-08-17;
   `8833770082bffec788b84002486e903b549f78c6`.
+- **M17 — Calculadora determinística e regras financeiras comuns:** concluído em 2026-08-17;
+  hash técnico a registrar após o commit e push deste checkpoint.
 
 ## Estrutura entregue até M15
 
@@ -198,8 +205,8 @@ explícitos. PDF digitalizado permanece disponível por render/visão, sem OCR l
 
 ## Trabalho não iniciado
 
-- M17–M26;
-- regras financeiras, auditoria, relatórios e golden cases.
+- M18–M26;
+- auditoria, relatórios e golden cases.
 
 ## Estado do repositório e Git
 
@@ -400,15 +407,24 @@ Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo f
 - Docker build Python 3.12 com PyMuPDF, frontend gates, Compose e health: **PASS**;
 - originais permanecem no storage append-only e cada evidência carrega SHA-256 reproduzível.
 
+## Validação M17
+
+- calculadora/finanças: **PASS**, 23 testes cobrindo 11 operações allowlisted, expressão aninhada,
+  trace, precisão Decimal, divisão por zero, limites, tolerâncias, consolidação e margem;
+- regressão com PostgreSQL descartável e sem credenciais externas: **PASS**, `143 passed, 3 skipped,
+  1 deselected` pelo mesmo flake ambiental PowerShell/Python 3.14;
+- Ruff lint/format e mypy estrito em 142 arquivos: **PASS**;
+- AST da calculadora sem chamadas `eval`/`exec`; literals aceitam apenas strings decimais finitas.
+
 ## Último commit estável
 
 `8833770082bffec788b84002486e903b549f78c6` —
-`feat: add M16 generic document tools`.
+`feat: add M16 generic document tools` (será substituído pelo hash técnico M17 após push).
 
-Este é o commit técnico M16, enviado a `origin/main`; M17 ainda não foi iniciado.
+Este é o commit técnico M16, enviado a `origin/main`; a implementação M17 está pronta para commit.
 
 ## Próxima ação recomendada
 
-Iniciar M17 sequencialmente. A validação IMAP real continua
+Criar e registrar o checkpoint M17; depois iniciar M18 sequencialmente. A validação IMAP real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir cadeia TLS confiável, e o contrato OpenAI real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir chave segura.

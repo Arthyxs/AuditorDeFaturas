@@ -728,6 +728,8 @@ Commit técnico: `8833770082bffec788b84002486e903b549f78c6`.
 
 ### M17 — Calculadora determinística e regras financeiras comuns
 
+**Status:** COMPLETED — concluído em 2026-08-17; M18 não iniciado neste checkpoint.
+
 **Objetivo:** executar aritmética solicitada pela IA com segurança e precisão.
 
 **Funcionalidades:** DSL declarativa allowlist; soma/subtração/multiplicação/divisão/max/min/percentual/round/ceil/floor/comparação; tolerância absoluta/percentual; consolidação; margem bruta.
@@ -739,6 +741,15 @@ Commit técnico: `8833770082bffec788b84002486e903b549f78c6`.
 **Testes necessários:** propriedades e casos de borda com `Decimal`; divisão por zero; escala; arredondamento; expressão proibida; tolerâncias combinadas; receita zero/ausente; consolidação de estados.
 
 **Critério objetivo de conclusão:** todos os vetores financeiros retornam resultado e trace determinísticos; código e banco não usam float para dinheiro; nenhuma expressão arbitrária é executada.
+
+**Evidência de conclusão:** DSL Pydantic recursiva com operações e comparadores enumerados,
+literais decimais textuais limitados, campos extras proibidos e limites de profundidade/nós;
+avaliador exclusivamente `Decimal` sob contexto fixo, sem lookup dinâmico, `eval` ou `exec`.
+Trace pós-ordem reproduz entradas/resultados. Tolerâncias combinadas preservam bruto/arredondado;
+consolidação prioriza `INCORRECT` e nunca oculta pendências; margem trata receita zero/ausente.
+Os 23 testes M17 cobrem todas as operações, precisão, divisão por zero, arredondamentos,
+expressões proibidas, limites, tolerância, consolidação e margem. Regressão PostgreSQL:
+`143 passed, 3 skipped, 1 deselected`; Ruff, format e mypy passaram.
 
 ### M18 — Modelo e orquestração de auditoria com provider fake
 
