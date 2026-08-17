@@ -750,6 +750,7 @@ consolidação prioriza `INCORRECT` e nunca oculta pendências; margem trata rec
 Os 23 testes M17 cobrem todas as operações, precisão, divisão por zero, arredondamentos,
 expressões proibidas, limites, tolerância, consolidação e margem. Regressão PostgreSQL:
 `143 passed, 3 skipped, 1 deselected`; Ruff, format e mypy passaram.
+Commit técnico: `8faf9a39fd43a27b3ada33295021c5e3e17fdeb3`.
 
 ### M18 — Modelo e orquestração de auditoria com provider fake
 

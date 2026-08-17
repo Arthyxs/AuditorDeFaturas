@@ -102,7 +102,7 @@ mantendo valores brutos explícitos e sem converter dinheiro por `float`.
 - **M16 — Ferramentas genéricas de PDF, planilha e imagem:** concluído em 2026-08-17;
   `8833770082bffec788b84002486e903b549f78c6`.
 - **M17 — Calculadora determinística e regras financeiras comuns:** concluído em 2026-08-17;
-  hash técnico a registrar após o commit e push deste checkpoint.
+  `8faf9a39fd43a27b3ada33295021c5e3e17fdeb3`.
 
 ## Estrutura entregue até M15
 
@@ -418,13 +418,13 @@ Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo f
 
 ## Último commit estável
 
-`8833770082bffec788b84002486e903b549f78c6` —
-`feat: add M16 generic document tools` (será substituído pelo hash técnico M17 após push).
+`8faf9a39fd43a27b3ada33295021c5e3e17fdeb3` —
+`feat: add M17 deterministic calculation engine`.
 
-Este é o commit técnico M16, enviado a `origin/main`; a implementação M17 está pronta para commit.
+Este é o commit técnico M17, enviado a `origin/main`; M18 ainda não foi iniciado.
 
 ## Próxima ação recomendada
 
-Criar e registrar o checkpoint M17; depois iniciar M18 sequencialmente. A validação IMAP real continua
+Iniciar M18 sequencialmente. A validação IMAP real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir cadeia TLS confiável, e o contrato OpenAI real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir chave segura.
