@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M11 implementados; M12 é o próximo milestone
+**Estado:** FECHADO E APROVADO — M00–M12 implementados; M13 é o próximo milestone
 **Atualizado em:** 2026-08-17
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -578,6 +578,8 @@ Compose passaram. Commit técnico: `b7b82f98645fabefc09648463e43f2c63f3a514c`.
 
 ### M12 — Fundação do provider de IA e telemetria
 
+**Status:** COMPLETED — concluído em 2026-08-17; M13 desbloqueado, mas não iniciado.
+
 **Objetivo:** integrar IA de forma substituível, observável e validada.
 
 **Funcionalidades:** portas por tarefa; router por provider/modelo; `OpenAIProvider`; Responses API; Structured Outputs; tool loop controlado; prompts versionados; `ai_calls`; preços por vigência; teste de provider.
@@ -589,6 +591,18 @@ Compose passaram. Commit técnico: `b7b82f98645fabefc09648463e43f2c63f3a514c`.
 **Testes necessários:** adapter com transporte mock; schema inválido; timeout/rate limit; contabilização de tokens/cache/custo; ausência de API key; isolamento do SDK; contrato com provider fake.
 
 **Critério objetivo de conclusão:** uma chamada estruturada de teste registra provider, modelo, prompt/hash, latência, tokens e status; nenhuma camada fora do adapter importa o SDK OpenAI.
+
+**Evidência de conclusão:** portas provider-neutral por tarefa, router configurável, provider fake e
+adapter OpenAI isolado integram a Responses API com Structured Outputs estritos, `store=False`,
+timeout e tool loop limitado por rodadas e chamadas. Prompts são carregados de arquivos versionados
+com hash; `ai_calls` preserva provider, modelo, prompt, latência, tokens/cache, custo, status e erro,
+enquanto `ai_price_versions` usa `NUMERIC` e vigência sem sobreposição. Testes mock cobrem saída
+estruturada, schema inválido, timeout, rate limit, ausência de chave, limites de tools e isolamento
+AST do SDK; testes PostgreSQL cobrem provider fake, preço versionado, telemetria de sucesso/erro e
+cálculo com `Decimal`. Suíte completa: `101 passed, 3 skipped`; Ruff, format, mypy, migration
+`20260817_0006`, `alembic check`, build e Compose passaram. O contrato real OpenAI não foi executado
+porque não há API key configurada no `.env`. Commit técnico:
+`36b72678494c056772d7e2a351d1cd93226d194a`.
 
 ### M13 — Classificação, revisão e movimentação de e-mails
 

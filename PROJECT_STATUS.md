@@ -2,13 +2,13 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** entrada por e-mail em implementação; ingestão idempotente concluída até M11
+**Fase atual:** fundações de entrada por e-mail e IA concluídas até M12
 **Macroetapa atual:** D — Entradas IMAP/manual e preparação de faturas
-**Milestone atual:** M11 concluído; M12 está desbloqueado, mas não foi iniciado
+**Milestone atual:** M12 concluído; M13 está desbloqueado, mas não foi iniciado
 
 ## Resumo executivo
 
-M00–M11 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M12 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
@@ -36,6 +36,10 @@ pasta, preservação append-only do RFC original e anexos, locks transacionais d
 de ingestão. Recoleta, movimento e corridas convergem para uma única mensagem e um único conjunto
 de blobs recuperáveis por hash.
 
+M12 adicionou portas de IA substituíveis, router provider/modelo, adapter OpenAI restrito à camada
+de infraestrutura, Responses API com Structured Outputs e tool loop controlado, prompts versionados,
+provider fake e telemetria persistente com preços versionados e cálculo monetário por `Decimal`.
+
 ## Milestones concluídos
 
 - **M00 — Aprovação do plano e prontidão do ambiente:** concluído em 2026-08-15.
@@ -55,8 +59,10 @@ de blobs recuperáveis por hash.
   `7517a274c13cc8eb3afd9e1347b54d45f20e18a9`.
 - **M11 — Ingestão, fingerprint e deduplicação de e-mails:** concluído em 2026-08-17;
   `b7b82f98645fabefc09648463e43f2c63f3a514c`.
+- **M12 — Fundação do provider de IA e telemetria:** concluído em 2026-08-17;
+  `36b72678494c056772d7e2a351d1cd93226d194a`.
 
-## Estrutura entregue até M11
+## Estrutura entregue até M12
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -132,11 +138,18 @@ de blobs recuperáveis por hash.
 - serviço/repository de ingestão com advisory locks transacionais antes da criação de blobs;
 - operação de storage para originais opacos e limitados, mantendo uploads documentais sob parsing;
 - job `email.ingest` com payload validado e testes de concorrência/idempotência PostgreSQL.
+- porta `AIProvider` e contratos imutáveis por tarefa sem dependência do SDK;
+- router provider/modelo e serviço de execução com telemetria redigida de sucesso e erro;
+- adapter OpenAI Responses com Structured Outputs estritos, `store=False`, timeout e tool loop
+  limitado, mantendo o SDK exclusivamente em `app/infrastructure/ai/openai_provider.py`;
+- prompts versionados em arquivo com hash, provider fake e validação local do schema retornado;
+- migration/tabelas `ai_calls` e `ai_price_versions`, preços por vigência sem sobreposição e custos
+  calculados com `Decimal`/`NUMERIC`.
 
 ## Trabalho não iniciado
 
-- M12–M26;
-- OpenAI e demais integrações;
+- M13–M26;
+- classificação de e-mail e integrações de negócio baseadas em IA;
 - regras financeiras, auditoria, relatórios e golden cases.
 
 ## Estado do repositório e Git
@@ -251,6 +264,14 @@ de blobs recuperáveis por hash.
   teste de setup passou isolado e na repetição completa;
 - migration `20260817_0005 (head)`, upgrade/downgrade e `alembic check`: **PASS**, sem drift;
 - build Docker M11 e Compose: **PASS**, três serviços saudáveis.
+- aceitação M12: **PASS**, 4 testes unitários do adapter/provider e 2 testes PostgreSQL de
+  telemetria/preço, incluindo schema inválido, tools, timeout/rate limit, chave ausente, fake,
+  tokens/cache/custo, status e erro;
+- regressão final após M12 com PostgreSQL real: **PASS**, `101 passed, 3 skipped`;
+- Ruff lint/format e mypy estrito após M12: **PASS**;
+- migration `20260817_0006 (head)` e `alembic check`: **PASS**, sem drift;
+- build Docker M12: **PASS** com CA entregue apenas como BuildKit secret; OpenAI SDK `3.1.0` na
+  imagem e Compose com `app`, `worker` e `postgres` saudáveis.
 
 ## Bloqueios, riscos e findings
 
@@ -264,13 +285,17 @@ emitido por `Norton Web/Mail Shield Untrusted Root`, e tanto o trust store padr�
 Certifi recusaram a cadeia antes da autenticação. A verificação TLS não foi desabilitada; nenhuma
 mensagem ou pasta foi alterada. O contrato fake/mock obrigatório passou integralmente.
 
+O contrato real OpenAI do M12 está pendente porque `OPENAI_API_KEY` não está configurada no `.env`.
+Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo foi adicionado ao Git.
+
 ## Último commit estável
 
-`b7b82f98645fabefc09648463e43f2c63f3a514c` — `feat: add M11 email ingestion and deduplication`
+`36b72678494c056772d7e2a351d1cd93226d194a` — `feat: add M12 AI provider foundation and telemetry`
 
-Este é o commit técnico final do M11, enviado a `origin/main`.
+Este é o commit técnico final do M12, enviado a `origin/main`.
 
 ## Próxima ação recomendada
 
-M12 — fundação do provider de IA e telemetria — está tecnicamente desbloqueado. Deve manter o SDK
-OpenAI exclusivamente no adapter e não iniciar classificação M13.
+M13 — classificação, revisão e movimentação de e-mails — está tecnicamente desbloqueado, mas não
+foi iniciado por limite explícito desta execução. Antes de implementá-lo, concluir a validação IMAP
+real com cadeia TLS confiável e executar contrato OpenAI mínimo somente quando houver chave segura.
