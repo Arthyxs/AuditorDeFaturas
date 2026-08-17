@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 
 import { TariffManagement } from './features/tariffs/TariffManagement'
+import { EmailReview } from './features/emails/EmailReview'
 
 type User = { username: string; role: 'ADMIN' | 'OPERATOR' | 'VIEWER' }
 type Mode = 'loading' | 'bootstrap' | 'login' | 'authenticated'
@@ -67,7 +68,10 @@ export function App() {
     return (
       <div className="authenticated-shell">
         <header className="topbar"><a className="brand" href="/">InvoiceAuditor</a><div><span>{user.username}</span><button className="secondary" type="button" onClick={() => void logout()}>Sair</button></div></header>
-        <main className="content-shell"><TariffManagement role={user.role} /></main>
+        <main className="content-shell">
+          <EmailReview role={user.role} />
+          <TariffManagement role={user.role} />
+        </main>
       </div>
     )
   }

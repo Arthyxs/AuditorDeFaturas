@@ -1,6 +1,7 @@
 """Immutable e-mail originals and mutable server-location metadata."""
 
 from datetime import datetime
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import (
@@ -11,6 +12,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -59,9 +61,28 @@ class MailMessage(UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMixin, Base):
         CheckConstraint("uidvalidity >= 1", name="positive_uidvalidity"),
         CheckConstraint("uid >= 1", name="positive_uid"),
         CheckConstraint("raw_size >= 1", name="positive_raw_size"),
-        CheckConstraint("status IN ('INGESTED')", name="mail_message_status"),
+        CheckConstraint(
+            "status IN ('INGESTED', 'CLASSIFIED', 'MOVED', 'MANUAL_REVIEW', 'ERROR')",
+            name="mail_message_status",
+        ),
+        CheckConstraint(
+            "classification IS NULL OR classification IN "
+            "('INVOICE', 'DUE_NOTICE', 'GENERAL', 'MANUAL_REVIEW')",
+            name="mail_message_classification",
+        ),
+        CheckConstraint(
+            "classification_confidence IS NULL OR "
+            "(classification_confidence >= 0 AND classification_confidence <= 1)",
+            name="classification_confidence_range",
+        ),
+        CheckConstraint(
+            "classification_threshold IS NULL OR "
+            "(classification_threshold >= 0 AND classification_threshold <= 1)",
+            name="classification_threshold_range",
+        ),
         Index("ix_mail_messages_account_received", "mail_account_id", "received_at"),
         Index("ix_mail_messages_message_id", "message_id"),
+        Index("ix_mail_messages_manual_review", "status", "created_at"),
     )
 
     mail_account_id: Mapped[UUID] = mapped_column(
@@ -91,6 +112,29 @@ class MailMessage(UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMixin, Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="INGESTED")
     original_folder: Mapped[str] = mapped_column(String(255), nullable=False)
     current_folder: Mapped[str] = mapped_column(String(255), nullable=False)
+    classification: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    classification_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    classification_threshold: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    partner_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    partner_document_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    invoice_attachment_ids: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
+    supporting_attachment_ids: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, default=list
+    )
+    classification_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    classification_evidence: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
+    classification_ai_call_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("ai_calls.id", ondelete="RESTRICT"), nullable=True
+    )
+    classified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    moved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    processing_error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    processing_error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reviewed_by_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), nullable=True
+    )
+    review_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     mail_account: Mapped[MailAccount] = relationship(back_populates="messages")
     attachments: Mapped[list["MailAttachment"]] = relationship(

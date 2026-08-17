@@ -1,7 +1,7 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M12 implementados; M13 é o próximo milestone
+**Estado:** FECHADO E APROVADO — M00–M13 implementados; M14 é o próximo milestone
 **Atualizado em:** 2026-08-17
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
@@ -614,6 +614,8 @@ passaram. Commit da remediação: `02aa13d1532cefe55c83ddb30db97988792257ad`.
 
 ### M13 — Classificação, revisão e movimentação de e-mails
 
+**Status:** COMPLETED — concluído em 2026-08-17; M14 desbloqueado.
+
 **Objetivo:** classificar mensagens com Luna e movê-las de forma segura.
 
 **Funcionalidades:** classes `INVOICE`, `DUE_NOTICE`, `GENERAL`, `MANUAL_REVIEW`; evidências; parceiro provável; anexos relevantes; `EMAIL_CLASSIFICATION_MIN_CONFIDENCE=0.80` por padrão e configurável; movimento idempotente; erros/retry.
@@ -625,6 +627,16 @@ passaram. Commit da remediação: `02aa13d1532cefe55c83ddb30db97988792257ad`.
 **Testes necessários:** fixtures com assunto enganoso e threads; valores abaixo/em/acima de `0.80`; mudança de configuração; registro do limiar efetivo; saída inválida; falha ao mover; repetição após movimento; nenhuma exclusão local.
 
 **Critério objetivo de conclusão:** conjunto de classificação aceito roteia corretamente e toda baixa confiança vai para revisão; falha IMAP aparece como erro recuperável sem perder o original.
+
+**Evidência de conclusão:** schema estruturado e prompt versionado classificam com provider/modelo
+configuráveis e registram evidência, parceiro provável, anexos escolhidos, confiança e limiar
+efetivo. Valores abaixo de `0.80` convergem para `MANUAL_REVIEW`; o valor exato é aceito. A
+classificação é persistida antes do `MOVE`, portanto falhas IMAP ficam explícitas e retomáveis sem
+nova chamada de IA ou perda do RFC/anexos. O worker encadeia ingestão → classificação por job
+idempotente; API/React fornecem revisão mínima com RBAC. Provider fake/PostgreSQL cobrem assunto
+enganoso/thread, limiares configuráveis, saída inválida, falha/retry e repetição pós-movimento.
+Suíte completa: `107 passed, 3 skipped`; Ruff, format, mypy, frontend, Alembic, build e Compose
+passaram sem credenciais externas. Commit técnico: pendente de registro após criação do checkpoint.
 
 ### M14 — Entrada canônica, auditoria manual e criação de fatura
 

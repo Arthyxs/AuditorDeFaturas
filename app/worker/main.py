@@ -6,15 +6,36 @@ import socket
 import time
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from threading import Event, Thread
 
+from app.application.services.ai import AIExecutionService, AIProviderRouter
+from app.application.services.email_classification import (
+    ClassificationFolders,
+    EmailClassificationService,
+)
+from app.application.services.email_ingestion import EmailIngestionService
 from app.application.services.jobs import WORKER_TICK_JOB, PollScheduler
 from app.config import Settings, get_settings
 from app.domain.jobs import JobRecord
-from app.infrastructure.persistence.repositories import PostgreSQLJobQueue
+from app.infrastructure.ai.openai_provider import OpenAIProvider
+from app.infrastructure.ai.prompts import PromptRepository
+from app.infrastructure.email.imap_provider import IMAPEmailProvider
+from app.infrastructure.persistence.repositories import (
+    PostgreSQLAITelemetryRepository,
+    PostgreSQLEmailClassificationRepository,
+    PostgreSQLJobQueue,
+    PostgreSQLMailIngestionRepository,
+)
 from app.infrastructure.persistence.session import create_database_engine, create_session_factory
+from app.infrastructure.storage import LocalStorageProvider
 from app.ports.jobs import JobQueue
 from app.worker.heartbeat import write_heartbeat
+from app.worker.jobs.email_classification import (
+    EMAIL_CLASSIFICATION_JOB,
+    EmailClassificationJobHandler,
+)
+from app.worker.jobs.email_ingestion import EMAIL_INGESTION_JOB, EmailIngestionJobHandler
 
 JobHandler = Callable[[JobRecord], None]
 
@@ -121,8 +142,77 @@ def run(settings: Settings | None = None, *, once: bool = False) -> None:
     if not resolved_settings.worker_enabled:
         return
     engine = create_database_engine(resolved_settings)
-    queue = PostgreSQLJobQueue(create_session_factory(engine))
-    runner = WorkerRunner(queue, resolved_settings, worker_id=_worker_id())
+    session_factory = create_session_factory(engine)
+    queue = PostgreSQLJobQueue(session_factory)
+    email_provider = None
+    handlers: dict[str, JobHandler] = {}
+    password = (
+        resolved_settings.imap_password.get_secret_value()
+        if resolved_settings.imap_password
+        else ""
+    )
+    if resolved_settings.imap_host and resolved_settings.imap_user and password:
+        email_provider = IMAPEmailProvider(
+            host=resolved_settings.imap_host,
+            port=resolved_settings.imap_port,
+            username=resolved_settings.imap_user,
+            password=password,
+            implicit_tls=resolved_settings.imap_ssl,
+            starttls=resolved_settings.imap_starttls,
+            timeout_seconds=resolved_settings.imap_timeout_seconds,
+            thread_scan_limit=resolved_settings.imap_thread_scan_limit,
+        )
+        storage = LocalStorageProvider(
+            resolved_settings.storage_root,
+            max_upload_size_bytes=resolved_settings.upload_max_size_bytes,
+        )
+        handlers[EMAIL_INGESTION_JOB] = EmailIngestionJobHandler(
+            EmailIngestionService(
+                email_provider=email_provider,
+                storage=storage,
+                repository=PostgreSQLMailIngestionRepository(session_factory),
+            ),
+            classification_queue=queue,
+            max_attempts=resolved_settings.worker_max_attempts,
+        )
+        openai_key = (
+            resolved_settings.openai_api_key.get_secret_value()
+            if resolved_settings.openai_api_key
+            else None
+        )
+        ai = AIExecutionService(
+            router=AIProviderRouter(
+                {
+                    "openai": OpenAIProvider(
+                        api_key=openai_key,
+                        timeout_seconds=resolved_settings.ai_timeout_seconds,
+                    )
+                }
+            ),
+            telemetry=PostgreSQLAITelemetryRepository(session_factory),
+        )
+        handlers[EMAIL_CLASSIFICATION_JOB] = EmailClassificationJobHandler(
+            EmailClassificationService(
+                repository=PostgreSQLEmailClassificationRepository(session_factory),
+                email_provider=email_provider,
+                ai=ai,
+                prompt_provider=PromptRepository(
+                    Path(__file__).resolve().parents[1] / "infrastructure" / "ai" / "prompts"
+                ),
+                provider=resolved_settings.ai_email_provider,
+                model=resolved_settings.ai_email_model,
+                min_confidence=resolved_settings.email_classification_min_confidence,
+                folders=ClassificationFolders(
+                    resolved_settings.imap_folder_invoices,
+                    resolved_settings.imap_folder_due_notices,
+                    resolved_settings.imap_folder_general,
+                    resolved_settings.imap_folder_review,
+                ),
+                thread_max_messages=resolved_settings.email_thread_max_messages,
+                thread_max_characters=resolved_settings.email_thread_max_characters,
+            )
+        )
+    runner = WorkerRunner(queue, resolved_settings, worker_id=_worker_id(), handlers=handlers)
     try:
         write_heartbeat()
         if once:
@@ -133,6 +223,8 @@ def run(settings: Settings | None = None, *, once: bool = False) -> None:
             runner.run_once()
             time.sleep(resolved_settings.worker_poll_interval_seconds)
     finally:
+        if email_provider is not None:
+            email_provider.close()
         engine.dispose()
 
 

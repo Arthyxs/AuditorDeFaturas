@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     imap_thread_scan_limit: int = Field(default=100, ge=1, le=1000)
     email_thread_max_messages: int = Field(default=10, ge=1, le=100)
     email_thread_max_characters: int = Field(default=50000, ge=1, le=1000000)
+    email_classification_min_confidence: Decimal = Field(
+        default=Decimal("0.80"), ge=Decimal("0"), le=Decimal("1")
+    )
 
     worker_enabled: bool = True
     worker_poll_interval_seconds: float = Field(default=2.0, ge=0.1, le=300)

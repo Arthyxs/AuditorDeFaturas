@@ -147,6 +147,18 @@ button {
   gap: 1.25rem;
 }
 
+.email-review {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1rem;
+}
+
 .page-header,
 .section-heading,
 .filters,

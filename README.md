@@ -176,7 +176,7 @@ O build de produção é gerado em `frontend/dist/`, diretório ignorado pelo Gi
 
 ## Limites atuais
 
-As fundações de IMAP, MIME, contexto de thread, ingestão/deduplicação de mensagens e provider de IA
-estão implementadas até M12. A etapa atual ainda não implementa classificação/movimentação de
-e-mails, criação de faturas, auditoria, relatórios nem regras de negócio tarifárias; essas
-capacidades começam em M13 e permanecem fora desta remediação.
+IMAP, MIME, contexto de thread, ingestão/deduplicação, provider de IA e
+classificação/revisão/movimentação estão implementados até M13. A classificação usa provider e
+modelo configuráveis, registra o limiar efetivo e pode ser testada sem credenciais pelo provider
+fake. Criação de faturas, seleção semântica, auditoria e relatórios começam em M14 e posteriores.

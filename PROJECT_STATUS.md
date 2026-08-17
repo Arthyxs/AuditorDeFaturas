@@ -2,13 +2,13 @@
 
 **Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
-**Fase atual:** fundações de entrada por e-mail e IA concluídas até M12
+**Fase atual:** classificação e movimentação de e-mail concluídas até M13
 **Macroetapa atual:** D — Entradas IMAP/manual e preparação de faturas
-**Milestone atual:** M12 concluído; M13 está desbloqueado, mas não foi iniciado
+**Milestone atual:** M13 concluído; M14 está desbloqueado, mas não foi iniciado
 
 ## Resumo executivo
 
-M00–M12 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+M00–M13 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
 e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
 `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
 `STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
@@ -44,7 +44,12 @@ A revisão independente mais recente de M07–M12 abriu REVIEW-012 (HIGH) e REVI
 (MEDIUM). A remediação serializa vigências de preço por provider/modelo, preserva partes MIME
 inline sem filename, tira I/O durável do transaction/lock de ingestão e impede recuperação de lease
 enquanto o handler mantém seu lock de execução vivo. Também foram fechados os findings seguros
-carregados REVIEW-006 e REVIEW-008. M13 não foi iniciado.
+carregados REVIEW-006 e REVIEW-008.
+
+M13 adicionou classificação estruturada por Luna configurável, limiar efetivo persistido,
+evidências/anexos/parceiro provável, revisão manual mínima e movimento IMAP seguro. A classificação
+é salva antes do movimento, permitindo retry sem repetir IA; ingestão encadeia o job de
+classificação por chave idempotente. Testes usam somente provider fake/mock.
 
 ## Milestones concluídos
 
@@ -67,8 +72,10 @@ carregados REVIEW-006 e REVIEW-008. M13 não foi iniciado.
   `b7b82f98645fabefc09648463e43f2c63f3a514c`.
 - **M12 — Fundação do provider de IA e telemetria:** concluído em 2026-08-17;
   `36b72678494c056772d7e2a351d1cd93226d194a`.
+- **M13 — Classificação, revisão e movimentação de e-mails:** concluído em 2026-08-17;
+  commit técnico pendente de registro após criação do checkpoint.
 
-## Estrutura entregue até M12
+## Estrutura entregue até M13
 
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
@@ -151,11 +158,16 @@ carregados REVIEW-006 e REVIEW-008. M13 não foi iniciado.
 - prompts versionados em arquivo com hash, provider fake e validação local do schema retornado;
 - migration/tabelas `ai_calls` e `ai_price_versions`, preços por vigência sem sobreposição e custos
   calculados com `Decimal`/`NUMERIC`.
+- migration `20260817_0007` e ciclo persistente de classificação/movimentação em `mail_messages`;
+- schema/prompt versionado de classificação, limiar `EMAIL_CLASSIFICATION_MIN_CONFIDENCE` e
+  provider/modelo configuráveis, com baixa confiança sempre convertida em revisão;
+- jobs idempotentes ingestão → classificação e retomada do movimento sem repetir chamada de IA;
+- API paginada/RBAC e interface React mínima para resolver `MANUAL_REVIEW`.
 
 ## Trabalho não iniciado
 
-- M13–M26;
-- classificação de e-mail e integrações de negócio baseadas em IA;
+- M14–M26;
+- entrada canônica/criação de faturas e demais integrações de negócio baseadas em IA;
 - regras financeiras, auditoria, relatórios e golden cases.
 
 ## Estado do repositório e Git
@@ -242,6 +254,16 @@ carregados REVIEW-006 e REVIEW-008. M13 não foi iniciado.
 
 ## Status de testes, build e execução
 
+- aceitação M13 com PostgreSQL real e provider fake: **PASS**, 2 cenários integrados cobrindo
+  assunto enganoso/thread, limiares abaixo/exato/acima, mudança de configuração, limiar efetivo,
+  ID de anexo inválido, falha/retry de movimento, idempotência e preservação do original;
+- regressão completa após M13: **PASS**, `107 passed, 3 skipped`;
+- Ruff lint/format e mypy estrito em 114 arquivos Python: **PASS**; frontend ESLint, TypeScript,
+  6 testes Vitest e build Vite: **PASS**;
+- Alembic `20260817_0007 (head)`, base → head → base → head e `alembic check`: **PASS**;
+- imagem Docker M13 construída com CA entregue apenas como BuildKit secret; Compose recriado com
+  `app`, `worker` e `postgres` saudáveis; health HTTP e worker `--once`: **PASS**.
+
 - remediação REVIEW-006/008/012–015: **PASS**;
 - suíte completa em container Python 3.12 com PostgreSQL real e sem IMAP/OpenAI reais:
   **PASS**, `105 passed, 3 skipped`;
@@ -313,15 +335,13 @@ Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo f
 
 ## Último commit estável
 
-`02aa13d1532cefe55c83ddb30db97988792257ad` —
-`fix: remediate M07-M12 review findings`.
-
-Este é o commit técnico da remediação, enviado a `origin/main`; M13 não foi iniciado.
+O checkpoint técnico M13 está pronto para criação e publicação; o hash será registrado logo após
+o commit. O último hash já publicado antes dele é `ed82f03` (`docs: record M07-M12 review
+remediation`).
 
 ## Próxima ação recomendada
 
-Resolver REVIEW-005 e REVIEW-007 em uma remediação dedicada da fundação de autenticação. M13 —
-classificação, revisão e movimentação de e-mails — continua tecnicamente desbloqueado, mas não foi
-iniciado por limite explícito desta execução. A validação IMAP real continua
+Implementar M14 — entrada canônica, submissão manual e criação de fatura — somente após publicar e
+registrar o checkpoint M13. A validação IMAP real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir cadeia TLS confiável, e o contrato OpenAI real continua
 `DEFERRED_EXTERNAL_VALIDATION` até existir chave segura.

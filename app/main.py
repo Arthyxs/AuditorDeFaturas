@@ -10,6 +10,7 @@ from starlette.types import Scope
 
 from app import __version__
 from app.api.routes.auth import router as auth_router
+from app.api.routes.emails import router as emails_router
 from app.api.routes.health import router as health_router
 from app.api.routes.tariffs import router as tariffs_router
 from app.api.routes.worker import router as worker_router
@@ -49,6 +50,7 @@ def create_app(
         max_upload_size_bytes=resolved_settings.upload_max_size_bytes,
     )
     application.include_router(auth_router)
+    application.include_router(emails_router)
     application.include_router(health_router)
     application.include_router(tariffs_router)
     application.include_router(worker_router)
