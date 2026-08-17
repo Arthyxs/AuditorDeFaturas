@@ -86,8 +86,8 @@ com pendência explícita. Entradas IMAP/manual equivalentes produzem o mesmo co
   `1097ec90e8c1ad145daf0564180cd326d75bab7d`.
 - **M14 — Entrada canônica, auditoria manual e criação de fatura:** concluído em 2026-08-17;
   `efc63ed373151d49d5ea028378b86c1d95edf1bc`.
-- **M15 — Seleção semântica de tarifários:** concluído em 2026-08-17; commit técnico pendente de
-  registro após o checkpoint.
+- **M15 — Seleção semântica de tarifários:** concluído em 2026-08-17;
+  `361e505053cdd506633168ea10a73cabea2d518b`.
 
 ## Estrutura entregue até M15
 
@@ -229,7 +229,8 @@ com pendência explícita. Entradas IMAP/manual equivalentes produzem o mesmo co
   `1097ec90e8c1ad145daf0564180cd326d75bab7d`;
 - commit técnico de conclusão do M14 presente localmente e em `origin/main`:
   `efc63ed373151d49d5ea028378b86c1d95edf1bc`;
-- commit técnico de conclusão do M15: pendente de registro após o checkpoint;
+- commit técnico de conclusão do M15 presente localmente e em `origin/main`:
+  `361e505053cdd506633168ea10a73cabea2d518b`;
 - divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
@@ -384,9 +385,10 @@ Os contratos mock/fake e toda a telemetria PostgreSQL passaram; nenhum segredo f
 
 ## Último commit estável
 
-Pendente de registro após criar e publicar o checkpoint técnico M15.
+`361e505053cdd506633168ea10a73cabea2d518b` —
+`feat: add M15 semantic tariff selection`.
 
-M16 não foi iniciado.
+Este é o commit técnico M15, enviado a `origin/main`; M16 não foi iniciado.
 
 ## Próxima ação recomendada
 

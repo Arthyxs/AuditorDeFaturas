@@ -698,7 +698,7 @@ com confiança/motivo e vínculo somente dos originais escolhidos; zero candidat
 mantêm a fatura `PENDING` com pendência explícita. Testes PostgreSQL cobrem zero/um/múltiplos
 candidatos, inativo, ID inexistente, repetição e equivalência IMAP/manual. Suíte completa:
 `113 passed, 3 skipped`; Ruff, format, mypy, frontend, Alembic, build e Compose passaram. Commit
-técnico: pendente de registro após o checkpoint.
+técnico: `361e505053cdd506633168ea10a73cabea2d518b`.
 
 ### M16 — Ferramentas genéricas de PDF, planilha e imagem
 
