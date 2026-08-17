@@ -10,10 +10,7 @@ x-app-base: &app-base
   env_file:
     - .env
   volumes:
-    - ./data/tariffs:/app/data/tariffs
-    - ./data/invoices:/app/data/invoices
-    - ./data/reports:/app/data/reports
-    - ./data/backups:/app/data/backups
+    - ./data:/app/data
 
 services:
   postgres:

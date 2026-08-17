@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+umask 077
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 project_root="$(cd -- "$script_dir/.." && pwd -P)"
@@ -83,6 +84,11 @@ mkdir -p -- "$(dirname -- "$environment_file")"
 if [[ ! -f "$environment_file" ]]; then
     cp -- "$template_path" "$environment_file"
 fi
+chmod 600 -- "$environment_file"
+if [[ "$(stat -c '%a' -- "$environment_file")" != "600" ]]; then
+    printf 'Unable to restrict environment file permissions to 0600.\n' >&2
+    exit 1
+fi
 
 app_secret="$(get_env_value APP_SECRET_KEY)"
 if [[ -z "$app_secret" || "$app_secret" == CHANGE_ME ]]; then
@@ -132,6 +138,12 @@ fi
 [[ -z "$imap_password" ]] || set_env_value IMAP_PASSWORD "$(env_literal "$imap_password")"
 [[ -z "$openai_api_key" ]] || set_env_value OPENAI_API_KEY "$(env_literal "$openai_api_key")"
 
+chmod 600 -- "$environment_file"
+if [[ "$(stat -c '%a' -- "$environment_file")" != "600" ]]; then
+    printf 'Unable to preserve environment file permissions as 0600.\n' >&2
+    exit 1
+fi
+
 mkdir -p -- \
     "$project_root/data/tariffs" \
     "$project_root/data/invoices" \
@@ -146,7 +158,26 @@ if [[ "$skip_docker" == false ]]; then
     docker compose version >/dev/null
     (
         cd -- "$project_root"
-        docker compose up -d --build --wait --wait-timeout 120
+        build_ca_path="${INVOICE_AUDITOR_BUILD_CA_PATH:-}"
+        build_ca_pem="${INVOICE_AUDITOR_BUILD_CA_PEM:-}"
+        if [[ -n "$build_ca_path" && -n "$build_ca_pem" ]]; then
+            printf 'Configure only one build CA source.\n' >&2
+            exit 1
+        elif [[ -n "$build_ca_path" ]]; then
+            if [[ ! -f "$build_ca_path" ]]; then
+                printf 'Configured build CA file does not exist.\n' >&2
+                exit 1
+            fi
+            docker build --secret "id=build_ca,src=$build_ca_path" -t invoice-auditor:local .
+            docker compose up -d --no-build --wait --wait-timeout 120
+        elif [[ -n "$build_ca_pem" ]]; then
+            docker build \
+                --secret id=build_ca,env=INVOICE_AUDITOR_BUILD_CA_PEM \
+                -t invoice-auditor:local .
+            docker compose up -d --no-build --wait --wait-timeout 120
+        else
+            docker compose up -d --build --wait --wait-timeout 120
+        fi
         docker compose exec -T app alembic upgrade head
     )
     printf 'InvoiceAuditor services are running and database migrations are current.\n'

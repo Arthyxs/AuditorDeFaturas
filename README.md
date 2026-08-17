@@ -30,6 +30,15 @@ Também aceitam as variáveis `INVOICE_AUDITOR_SETUP_IMAP_HOST`,
 `INVOICE_AUDITOR_SETUP_IMAP_USER`, `INVOICE_AUDITOR_SETUP_IMAP_PASSWORD` e
 `INVOICE_AUDITOR_SETUP_OPENAI_API_KEY` para instalação não interativa. `.env` é local e
 ignorado pelo Git; `.env.example` contém somente valores públicos e campos vazios.
+Os scripts restringem o `.env` a modo `0600` no Linux e, no Windows, a ACL do usuário
+atual, SYSTEM e administradores locais; a instalação falha se essa proteção não puder ser
+aplicada.
+
+Em redes com inspeção TLS, configure a CA oficial fora do repositório em
+`INVOICE_AUDITOR_BUILD_CA_PATH` ou forneça o PEM por
+`INVOICE_AUDITOR_BUILD_CA_PEM`. O setup entrega a CA ao BuildKit como secret somente
+durante `npm ci`/`pip install`; ela não entra nas camadas da imagem. Nunca desabilite a
+verificação TLS nem versione certificados internos.
 
 Após a configuração inicial:
 
@@ -38,9 +47,9 @@ docker compose up -d --build
 docker compose ps
 ```
 
-O processo web fica disponível em `http://localhost:8000` e seu liveness em
+O processo web e o bundle React ficam disponíveis em `http://localhost:8000`; o liveness está em
 `http://localhost:8000/api/health/live`. Os três serviços possuem health checks. O banco
-usa volume nomeado e os diretórios operacionais usam bind mounts sob `data/`, que é
+usa volume nomeado e todo o `STORAGE_ROOT` usa um único bind mount sob `data/`, que é
 ignorado pelo Git.
 
 As configurações são validadas antes do processo iniciar. `APP_SECRET_KEY`,
@@ -86,11 +95,12 @@ sidecar de metadata é publicado por rename atômico no mesmo filesystem. Leitur
 novamente tamanho e hash antes de retornar bytes.
 
 Uploads aceitam tecnicamente PDF, XLSX, XLS, CSV, PNG, JPEG e TIFF, com conferência de nome,
-extensão, MIME declarado e estrutura/assinatura mínima. Traversal, conteúdo divergente,
-arquivos vazios/truncados, ZIPs com expansão insegura, formatos executáveis e tamanho
-excedido são rejeitados. Arquivos persistidos não recebem bits de execução. Exclusão física
-é negada sem motivo explícito e confirmação de referências liberadas; soft delete pertence
-às entidades de produto dos próximos milestones.
+extensão, MIME declarado e parse estrutural por bibliotecas específicas, sem executar conteúdo.
+Traversal, conteúdo divergente, documentos fabricados ou truncados, XML perigoso, ZIPs com
+expansão insegura, polyglots detectáveis, formatos executáveis e tamanho excedido são rejeitados.
+Arquivos persistidos não recebem bits de execução. Exclusão física é negada sem motivo explícito
+e confirmação de referências liberadas; soft delete pertence às entidades de produto dos
+próximos milestones.
 
 ## Backend
 

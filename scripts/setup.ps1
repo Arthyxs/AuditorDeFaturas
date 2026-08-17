@@ -71,6 +71,67 @@ function ConvertFrom-SecureInput {
     return [System.Net.NetworkCredential]::new('', $Value).Password
 }
 
+function Protect-EnvironmentFile {
+    param([string]$Path)
+
+    if ($env:OS -eq 'Windows_NT') {
+        $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+        $allowedValues = @(
+            $identity.User.Value,
+            'S-1-5-18',
+            'S-1-5-32-544'
+        )
+        & icacls.exe $Path /inheritance:r | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Unable to remove inherited access from environment file.'
+        }
+        $grantArguments = @(
+            $Path,
+            '/grant:r',
+            "*$($allowedValues[0]):(F)",
+            "*$($allowedValues[1]):(F)",
+            "*$($allowedValues[2]):(F)"
+        )
+        & icacls.exe @grantArguments | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Unable to grant protected environment file access.'
+        }
+
+        $verified = Get-Acl -LiteralPath $Path
+        $unexpected = @($verified.Access | Where-Object {
+            $sidValue = $_.IdentityReference.Translate(
+                [System.Security.Principal.SecurityIdentifier]
+            ).Value
+            $sidValue -notin $allowedValues
+        })
+        foreach ($rule in $unexpected) {
+            $sidValue = $rule.IdentityReference.Translate(
+                [System.Security.Principal.SecurityIdentifier]
+            ).Value
+            & icacls.exe $Path /remove:g "*$sidValue" /remove:d "*$sidValue" | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                throw 'Unable to remove unexpected environment file access.'
+            }
+        }
+
+        $verified = Get-Acl -LiteralPath $Path
+        $unexpected = @($verified.Access | Where-Object {
+            $sidValue = $_.IdentityReference.Translate(
+                [System.Security.Principal.SecurityIdentifier]
+            ).Value
+            $_.IsInherited -or $sidValue -notin $allowedValues
+        })
+        if (-not $verified.AreAccessRulesProtected -or $unexpected.Count -ne 0) {
+            throw 'Unable to restrict environment file ACL.'
+        }
+    } else {
+        & chmod 600 -- $Path
+        if ($LASTEXITCODE -ne 0 -or (& stat -c '%a' -- $Path).Trim() -ne '600') {
+            throw 'Unable to restrict environment file permissions to 0600.'
+        }
+    }
+}
+
 $environmentParent = Split-Path -Parent $EnvironmentFile
 if (-not [string]::IsNullOrWhiteSpace($environmentParent)) {
     New-Item -ItemType Directory -Force -Path $environmentParent | Out-Null
@@ -79,6 +140,7 @@ if (-not [string]::IsNullOrWhiteSpace($environmentParent)) {
 if (-not (Test-Path -LiteralPath $EnvironmentFile)) {
     Copy-Item -LiteralPath $TemplatePath -Destination $EnvironmentFile
 }
+Protect-EnvironmentFile -Path $EnvironmentFile
 
 $appSecret = Get-EnvValue -Path $EnvironmentFile -Name 'APP_SECRET_KEY'
 if ([string]::IsNullOrWhiteSpace($appSecret) -or $appSecret -eq 'CHANGE_ME') {
@@ -132,6 +194,8 @@ foreach ($item in $externalValues.GetEnumerator()) {
     }
 }
 
+Protect-EnvironmentFile -Path $EnvironmentFile
+
 foreach ($directory in 'tariffs', 'invoices', 'reports', 'temp', 'backups') {
     New-Item -ItemType Directory -Force -Path (Join-Path $ProjectRoot "data/$directory") | Out-Null
 }
@@ -143,7 +207,23 @@ if (-not $SkipDocker) {
     try {
         docker version --format '{{.Server.Version}}' | Out-Null
         docker compose version | Out-Null
-        docker compose up -d --build --wait --wait-timeout 120
+        $buildCaPath = $env:INVOICE_AUDITOR_BUILD_CA_PATH
+        $buildCaPem = $env:INVOICE_AUDITOR_BUILD_CA_PEM
+        if (-not [string]::IsNullOrWhiteSpace($buildCaPath) -and
+            -not [string]::IsNullOrWhiteSpace($buildCaPem)) {
+            throw 'Configure only one build CA source.'
+        } elseif (-not [string]::IsNullOrWhiteSpace($buildCaPath)) {
+            if (-not (Test-Path -LiteralPath $buildCaPath -PathType Leaf)) {
+                throw 'Configured build CA file does not exist.'
+            }
+            docker build --secret "id=build_ca,src=$buildCaPath" -t invoice-auditor:local .
+            docker compose up -d --no-build --wait --wait-timeout 120
+        } elseif (-not [string]::IsNullOrWhiteSpace($buildCaPem)) {
+            docker build --secret id=build_ca,env=INVOICE_AUDITOR_BUILD_CA_PEM -t invoice-auditor:local .
+            docker compose up -d --no-build --wait --wait-timeout 120
+        } else {
+            docker compose up -d --build --wait --wait-timeout 120
+        }
         docker compose exec -T app alembic upgrade head
     } finally {
         Pop-Location

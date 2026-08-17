@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import stat
 import subprocess
 from pathlib import Path
 
@@ -60,6 +61,34 @@ def assert_idempotent_and_redacted(command: list[str], environment_file: Path) -
         *EXTERNAL_SECRETS.values(),
     ):
         assert secret not in combined_output
+
+    if os.name == "nt":
+        acl_script = (
+            "$acl=Get-Acl -LiteralPath $env:INVOICE_AUDITOR_ACL_TEST_PATH; "
+            "$current=[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value; "
+            "$rules=@($acl.Access | ForEach-Object { "
+            "$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value "
+            "}); "
+            "[pscustomobject]@{Protected=$acl.AreAccessRulesProtected;"
+            "Current=$current;Rules=$rules} "
+            "| ConvertTo-Json -Compress"
+        )
+        inspected = subprocess.run(
+            [command[0], "-NoProfile", "-Command", acl_script],
+            check=True,
+            capture_output=True,
+            text=True,
+            env={**os.environ, "INVOICE_AUDITOR_ACL_TEST_PATH": str(environment_file)},
+        )
+        import json
+
+        acl = json.loads(inspected.stdout)
+        allowed = {acl["Current"], "S-1-5-18", "S-1-5-32-544"}
+        assert acl["Protected"] is True
+        assert acl["Current"] in acl["Rules"]
+        assert set(acl["Rules"]).issubset(allowed)
+    else:
+        assert stat.S_IMODE(environment_file.stat().st_mode) == 0o600
 
 
 def test_powershell_setup_is_idempotent_with_space_in_path(tmp_path: Path) -> None:
