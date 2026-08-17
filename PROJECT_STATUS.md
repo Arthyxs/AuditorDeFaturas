@@ -1,17 +1,18 @@
 # InvoiceAuditor — Estado do Projeto
 
-**Atualizado em:** 2026-08-16
+**Atualizado em:** 2026-08-17
 **Especificação:** v3.0, fechada para implementação
 **Fase atual:** fundação executável, segura e persistente concluída até M06
 **Macroetapa atual:** B — Fundação executável, segura e persistente
-**Milestone atual:** nenhum em execução; M06 validado e concluído, M07 desbloqueado e não iniciado
+**Milestone atual:** nenhum em execução; remediação CRITICAL/HIGH da revisão concluída, M07 não iniciado
 
 ## Resumo executivo
 
-M00–M06 estão concluídos. Além da autenticação/RBAC, a aplicação agora possui porta de
-storage substituível e adapter local imutável, atômico e persistente, com nomes internos,
-SHA-256, metadata, leitura verificada, exclusão física controlada e validação segura dos
-formatos documentais aprovados.
+M00–M06 estão implementados. A revisão independente de 2026-08-17 não encontrou CRITICAL
+e abriu quatro findings HIGH; todos foram corrigidos e revalidados no commit
+`97fb4da3811983e2c6e26d8558cb9989b56a5d2b`. A SPA agora é servida pelo runtime canônico, todo o
+`STORAGE_ROOT` é persistente, o `.env` recebe permissões restritivas e uploads usam
+parsers reais com limites de segurança.
 
 Nenhuma regra de negócio, entidade futura, integração ou job foi antecipado.
 O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis permanecem no M09.
@@ -31,7 +32,7 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - `pyproject.toml` com Python 3.12+, dependências FastAPI/Uvicorn e grupo de desenvolvimento;
 - pacote `app/` organizado pelas camadas aprovadas: API, aplicação, domínio, portas,
   cálculo, infraestrutura, relatórios e worker;
-- factory e entry point FastAPI mínimos, sem efeitos de infraestrutura ou endpoints futuros;
+- factory e entry point FastAPI com routers de fundação e entrega segura do bundle React;
 - `tests/` com smoke tests e diretórios reservados para as suítes aprovadas;
 - Ruff para lint e formatação;
 - mypy em modo estrito como solução documentada de type checking Python;
@@ -42,11 +43,12 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - `Dockerfile` multi-stage com build Vite e runtime Python 3.12 não-root;
 - `docker-compose.yml` com `app`, `worker` e PostgreSQL 17;
 - imagem compartilhada para os dois processos da aplicação;
-- volume nomeado para PostgreSQL e bind mounts persistentes sob `data/`;
+- volume nomeado para PostgreSQL e bind mount persistente de todo `STORAGE_ROOT` sob `data/`;
 - health checks dos três serviços, endpoint `/api/health/live` e heartbeat do worker.
 - `Settings` Pydantic tipado para dev/test/prod, timezone, banco e opções aprovadas;
 - segredos obrigatórios como `SecretStr`, validação de força/placeholder e resumo redigido;
-- `setup.ps1` e `setup.sh` idempotentes, com geração criptográfica de segredos internos;
+- `setup.ps1` e `setup.sh` idempotentes, com geração criptográfica de segredos internos,
+  ACL/modo restritivos para `.env` e CA de build opcional via BuildKit secret;
 - `.env.example` sem credenciais/placeholders e `.env` operacional ignorado pelo Git;
 - timezone IANA portável no Windows/Linux por `tzdata`.
 - SQLAlchemy 2/psycopg, engine UTC, session factory e contexto transacional;
@@ -65,10 +67,13 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - porta `StorageProvider`, metadata imutável e adapter `LocalStorageProvider`;
 - streaming com limite, SHA-256, `fsync` e publicação atômica do blob+sidecar;
 - nomes internos UUID, integridade revalidada em leitura e colisões sem overwrite;
-- validação de nome/extensão/MIME/conteúdo/tamanho para PDF/XLSX/XLS/CSV/PNG/JPEG/TIFF;
-- bloqueio de traversal, conteúdo truncado/divergente, ZIP bomb e executáveis;
+- validação por parser de nome/extensão/MIME/conteúdo/tamanho para
+  PDF/XLSX/XLS/CSV/PNG/JPEG/TIFF;
+- bloqueio de traversal, conteúdo fabricado/truncado/divergente, XML perigoso, ZIP bomb,
+  polyglot detectável e executáveis;
 - exclusão física negada por padrão e liberada somente com motivo/referências verificadas;
-- persistência comprovada no bind mount após recriação real do container `app`.
+- persistência comprovada após recriação real do container para seis áreas, inclusive
+  `emails` e `attachments`.
 
 ## Trabalho não iniciado
 
@@ -94,7 +99,9 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   `fa78c0b47530c659af3f388768cdea3c8b46e737`;
 - commit técnico de conclusão do M06 presente localmente e em `origin/main`:
   `cb112e223018b939bca646007633caae2510234a`;
-- divergência local/remoto após o push do M06: `0` à frente, `0` atrás;
+- commit técnico da remediação da revisão:
+  `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`;
+- divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
 
@@ -147,53 +154,32 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 
 ## Status de testes, build e execução
 
-- suíte com PostgreSQL real: **PASS**, 23 testes; 1 skip condicional do setup Linux no host
-  Windows, já executado separadamente em container Linux;
-- suíte local sem exposição do banco: **PASS**, 20 testes; 4 skips condicionais esperados;
-- Python lint (`ruff check`): **PASS**;
-- Python format check (`ruff format --check`): **PASS**, 61 arquivos formatados;
-- Python type check (`mypy`, modo estrito): **PASS**, 50 arquivos verificados;
-- frontend lint (`eslint`): **PASS**;
-- frontend TypeScript type check (`tsc -b`): **PASS**;
-- frontend production build: **PASS** dentro do build Docker sem cache, Vite 8.2.1;
-- Compose config: **PASS**;
-- Compose health: **PASS**, três serviços saudáveis;
-- persistência PostgreSQL entre recriações: **PASS**;
-- scan de segredos/artefatos: **PASS**, `.env` ignorado e nenhum segredo real versionado;
-- artefatos locais `.venv`, caches, `node_modules` e `frontend/dist`: ignorados pelo Git;
-- configuração válida/inválida e segredo ausente: **PASS**;
-- idempotência/paths/logs de setup: **PASS** Windows e Linux;
-- migrations: **PASS**, head aplicado, downgrade/upgrade e drift check aprovados.
-- segurança M05 em PostgreSQL real: **PASS**, hash/verificação Argon2id, bootstrap
-  concorrente, bloqueio do segundo admin, expiração, revogação, logout, CSRF/origin,
-  cookies e matriz RBAC;
-- suíte com PostgreSQL real: **PASS**, 32 testes e 1 skip Linux condicional já coberto no
-  milestone de setup;
+- suíte completa com PostgreSQL real e recriação Docker: **PASS**, 73 testes; 1 skip
+  condicional do setup Linux no host Windows, executado separadamente em container Linux;
+- regressões de revisão: **PASS** para SPA/API na origem canônica, seis áreas persistentes,
+  ACL Windows, modo Linux `0600`, parsers válidos e casos adversariais;
+- Ruff lint e format check: **PASS**, 76 arquivos;
+- mypy estrito: **PASS**, 64 arquivos;
+- frontend ESLint, TypeScript e Vite: **PASS** no stage Docker;
+- Docker build sem cache com CA oficial via secret: **PASS**; nenhum bypass de TLS;
+- Compose config e health: **PASS**, `app`, `worker` e `postgres` saudáveis;
+- raiz `/`: **PASS**, shell React; `/api/health/live`: **PASS**;
 - migration atual: `20260816_0002 (head)`; `alembic check`: **PASS**, sem drift;
-- build Docker e frontend: **PASS**; `app`, `worker` e `postgres`: **healthy**.
-- storage M06: **PASS**, 30 testes unitários de integridade, atomicidade, colisão,
-  truncamento/corrupção, traversal, MIME/extensão/conteúdo, limite, ZIP bomb, não execução e
-  exclusão controlada;
-- persistência após recriação real do container `app`: **PASS**, arquivo sintético verificado
-  e removido ao final;
-- suíte completa com PostgreSQL real: **PASS**, 63 testes e 2 skips condicionais esperados;
-- Ruff/format/mypy/ESLint/TypeScript: **PASS**; Docker build e três health checks: **PASS**;
-- Alembic permanece em `20260816_0002 (head)` e sem drift; M06 não exige schema novo.
+- scan pré-commit: **PASS**, sem `.env`, CA, segredos, dados operacionais ou artefatos.
 
 ## Bloqueios, riscos e findings
 
-Nenhum bloqueio técnico ou finding aberto. M07 está tecnicamente desbloqueado, mas não foi
-iniciado neste chat conforme instrução explícita.
-
-`CODE_REVIEW.md` permanece sem findings. ADR-004 foi concretizada com publicação atômica de
-diretório, sidecar mínimo, verificação em leitura e autorização explícita para exclusão.
+Não há finding CRITICAL ou HIGH aberto. Permanecem abertos REVIEW-005–008 (MEDIUM) e
+REVIEW-009 (LOW); REVIEW-010 e REVIEW-011 foram corrigidos por serem seguros e diretamente
+relacionados à validação desta remediação. M07 não foi iniciado neste chat.
 
 ## Último commit estável
 
-`cb112e223018b939bca646007633caae2510234a` — `feat: add immutable M06 local storage`
+`97fb4da3811983e2c6e26d8558cb9989b56a5d2b` — `fix: resolve high-severity foundation review findings`
 
-Este commit contém a implementação, os testes, os gates e a memória de conclusão do M06.
+Este é o commit técnico final das correções CRITICAL/HIGH solicitadas.
 
 ## Próxima ação recomendada
 
-Em uma nova execução autorizada, iniciar M07 — Catálogo e API de tarifários.
+Em uma nova execução autorizada, avaliar/corrigir os findings MEDIUM restantes da fundação
+antes de decidir o início de M07. Não iniciar M07 como continuação automática desta remediação.

@@ -1,8 +1,8 @@
 # InvoiceAuditor — Plano de Implementação
 
 **Base:** `ESPECIFICACAO_COMPLETA_AUDITOR_FATURAS_V3.md` v3.0
-**Estado:** FECHADO E APROVADO — M00–M06 concluídos; M07 desbloqueado e não iniciado
-**Atualizado em:** 2026-08-16
+**Estado:** FECHADO E APROVADO — M00–M06 implementados; HIGH da revisão corrigidos; M07 não iniciado
+**Atualizado em:** 2026-08-17
 **Regra:** este plano organiza a implementação sem reduzir a especificação e incorpora os requisitos adicionais aprovados em 2026-08-15 para auditoria manual e homologação do auditor.
 
 ## 1. Objetivo e guardrails
@@ -396,7 +396,8 @@ mypy, ESLint, TypeScript, build Docker sem cache e health dos três serviços ap
 
 ### M05 — Autenticação, RBAC e primeiro administrador
 
-**Status:** COMPLETED — concluído em 2026-08-16; M06 desbloqueado, não iniciado.
+**Status:** COMPLETED — concluído em 2026-08-16; entrega da SPA revalidada em 2026-08-17.
+REVIEW-005–007 (MEDIUM) e REVIEW-009 (LOW) permanecem rastreados.
 
 **Objetivo:** proteger o produto desde o primeiro acesso.
 
@@ -421,7 +422,8 @@ Ruff, mypy estrito, ESLint, TypeScript, build Docker e health dos três serviço
 
 ### M06 — Storage local imutável e uploads seguros
 
-**Status:** COMPLETED — concluído em 2026-08-16; M07 desbloqueado, não iniciado.
+**Status:** COMPLETED — concluído em 2026-08-16 e revalidado após correções HIGH em
+2026-08-17; M07 não iniciado. REVIEW-008 (MEDIUM) permanece rastreado.
 
 **Objetivo:** preservar arquivos com integridade e segurança.
 
@@ -439,11 +441,13 @@ Ruff, mypy estrito, ESLint, TypeScript, build Docker e health dos três serviço
 streaming limitado, SHA-256 e `fsync`; arquivo e sidecar de metadata publicados juntos por
 rename atômico de diretório; UUID/nome interno; leitura revalida tamanho e hash no mesmo
 descritor; colisão não sobrescreve; exclusão física negada sem motivo explícito e referências
-liberadas; PDF/XLSX/XLS/CSV/PNG/JPEG/TIFF validados por extensão, MIME e estrutura mínima;
-ZIP bomb, executável, arquivo truncado, corrupção, tamanho excedido e traversal recusados;
-30 testes unitários M06 e teste automatizado de persistência após recriação do container
-aprovados; suíte completa com PostgreSQL real com 63 testes aprovados e 2 skips condicionais;
-Ruff, mypy, ESLint, TypeScript, build Docker, Alembic sem drift e health aprovados.
+liberadas; PDF/XLSX/XLS/CSV/PNG/JPEG/TIFF validados por extensão, MIME, parsers reais e
+limites de recursos; ZIP bomb, XML perigoso, executável, arquivo fabricado/truncado,
+polyglot detectável, corrupção, tamanho excedido e traversal recusados; todo o
+`STORAGE_ROOT` persiste em um bind mount único; teste automatizado verifica seis áreas após
+recriação do container. Na revalidação de 2026-08-17, a suíte completa com PostgreSQL real
+teve 73 testes aprovados e 1 skip condicional Linux, coberto separadamente; Ruff, mypy,
+ESLint, TypeScript, build Docker sem cache, Alembic sem drift e health foram aprovados.
 
 ### M07 — Catálogo e API de tarifários
 
