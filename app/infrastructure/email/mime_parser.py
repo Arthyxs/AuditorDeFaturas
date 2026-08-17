@@ -72,13 +72,19 @@ def parse_mime_message(
         disposition = part.get_content_disposition()
         filename = part.get_filename()
         content_id = part.get("Content-ID")
-        is_attachment = disposition == "attachment" or filename is not None
+        content_type = part.get_content_type()
+        is_attachment = (
+            disposition == "attachment"
+            or filename is not None
+            or content_id is not None
+            or not content_type.startswith("text/")
+        )
         if is_attachment:
             raw_payload = part.get_payload(decode=True)
             payload = raw_payload if isinstance(raw_payload, bytes) else b""
             attachments.append(
                 EmailAttachment(
-                    filename=filename or "attachment",
+                    filename=filename or f"attachment-{len(attachments)}.bin",
                     mime_type=part.get_content_type(),
                     content_id=str(content_id) if content_id else None,
                     disposition=disposition,
@@ -86,7 +92,6 @@ def parse_mime_message(
                 )
             )
             continue
-        content_type = part.get_content_type()
         if content_type == "text/plain":
             content = _text_payload(part)
             if content:

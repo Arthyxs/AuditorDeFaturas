@@ -1,5 +1,6 @@
 """Port for durable PostgreSQL-independent job orchestration."""
 
+from contextlib import AbstractContextManager
 from datetime import datetime, timedelta
 from typing import Any, Protocol
 from uuid import UUID
@@ -22,6 +23,9 @@ class JobQueue(Protocol):
     ) -> tuple[JobRecord, bool]: ...
 
     def claim(self, *, worker_id: str, now: datetime) -> JobRecord | None: ...
+
+    def execution_guard(self, job_id: UUID) -> AbstractContextManager[None]:
+        """Hold a crash-released guard preventing stale recovery during active execution."""
 
     def heartbeat(self, job_id: UUID, *, worker_id: str, now: datetime) -> bool: ...
 

@@ -2,9 +2,10 @@
 
 from datetime import datetime
 from decimal import Decimal
+from hashlib import sha256
 from uuid import UUID
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 
 from app.infrastructure.persistence.models import AICall, AIPriceVersion
 from app.infrastructure.persistence.session import SessionFactory
@@ -15,6 +16,12 @@ from app.ports.ai import (
     AITelemetryRepository,
     NewAICall,
 )
+
+
+def _advisory_key(value: str) -> int:
+    """Map a provider/model pricing stream to a stable signed PostgreSQL lock key."""
+    unsigned = int.from_bytes(sha256(value.encode("utf-8")).digest()[:8], "big")
+    return unsigned - (1 << 64) if unsigned >= (1 << 63) else unsigned
 
 
 class PostgreSQLAITelemetryRepository(AITelemetryRepository):
@@ -37,6 +44,13 @@ class PostgreSQLAITelemetryRepository(AITelemetryRepository):
         database = self._session_factory()
         try:
             with database.begin():
+                database.execute(
+                    select(
+                        func.pg_advisory_xact_lock(
+                            _advisory_key(f"ai-price:{provider.casefold()}:{model}")
+                        )
+                    )
+                )
                 overlap_filters = [
                     AIPriceVersion.provider == provider.casefold(),
                     AIPriceVersion.model == model,

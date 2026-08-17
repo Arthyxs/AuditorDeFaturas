@@ -34,6 +34,7 @@ get_env_value() {
     local name="$1"
     local line
     while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%$'\r'}"
         if [[ "$line" == "$name="* ]]; then
             printf '%s' "${line#*=}"
             return 0
@@ -55,6 +56,7 @@ set_env_value() {
 
     : >"$temporary_file"
     while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%$'\r'}"
         if [[ "$line" == "$name="* ]]; then
             printf '%s=%s\n' "$name" "$value" >>"$temporary_file"
             found=true

@@ -8,10 +8,12 @@ import ssl
 from datetime import UTC, datetime
 from email.message import EmailMessage as MIMEMessage
 from email.policy import SMTP
+from hashlib import sha256
 from typing import Any
 
 import pytest
 
+from app.domain.email.fingerprint import fingerprint_message
 from app.infrastructure.email.imap_provider import IMAPConnection, IMAPEmailProvider
 from app.infrastructure.email.mime_parser import parse_mime_message
 from app.infrastructure.email.thread_resolver import resolve_thread_context
@@ -142,6 +144,37 @@ def test_mime_parser_preserves_headers_bodies_encodings_and_attachment() -> None
     assert parsed.attachments[0].filename == "fatura-ç.csv"
     assert parsed.attachments[0].mime_type == "text/csv"
     assert parsed.attachments[0].payload.startswith(b"cte;valor")
+
+
+def test_mime_parser_preserves_filename_less_inline_binary_part_in_fingerprint() -> None:
+    message = MIMEMessage()
+    message["Message-ID"] = "<inline@example.com>"
+    message["From"] = "billing@example.com"
+    message["To"] = "finance@example.com"
+    message["Subject"] = "Invoice with inline evidence"
+    message["Date"] = "Mon, 17 Aug 2026 12:00:00 -0300"
+    message.set_content("See inline image")
+    message.add_alternative('<p><img src="cid:evidence"></p>', subtype="html")
+    inline = MIMEMessage()
+    inline.set_type("image/png")
+    inline["Content-ID"] = "<evidence>"
+    inline["Content-Disposition"] = "inline"
+    inline.set_payload("aW5saW5lLWV2aWRlbmNl")
+    inline["Content-Transfer-Encoding"] = "base64"
+    message.make_mixed()
+    message.attach(inline)
+    raw = message.as_bytes(policy=SMTP)
+    locator = EmailMessageLocator(folder="INBOX", uidvalidity=81, uid=8)
+
+    parsed = parse_mime_message(raw, locator=locator, received_at=datetime.now(UTC))
+    fingerprint = fingerprint_message(parsed)
+
+    assert len(parsed.attachments) == 1
+    assert parsed.attachments[0].filename == "attachment-0.bin"
+    assert parsed.attachments[0].mime_type == "image/png"
+    assert parsed.attachments[0].content_id == "<evidence>"
+    assert parsed.attachments[0].payload == b"inline-evidence"
+    assert fingerprint.attachment_sha256s == (sha256(b"inline-evidence").hexdigest(),)
 
 
 def test_contract_lists_peeks_fetches_creates_and_moves_with_uid_traceability() -> None:

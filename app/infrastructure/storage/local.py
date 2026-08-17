@@ -194,6 +194,45 @@ class LocalStorageProvider(StorageProvider):
         self._validate_metadata(metadata, key)
         return metadata
 
+    def list_files(
+        self, area: str, *, after: str | None = None, limit: int = 100
+    ) -> tuple[StoredFileMetadata, ...]:
+        """List verified metadata without exposing local paths through the provider port."""
+        if limit < 1 or limit > 1000:
+            raise ValueError("storage list limit must be between 1 and 1000")
+        area_path = self._area_path(area)
+        if after is not None:
+            after_area, separator, after_id = after.partition("/")
+            if (
+                separator != "/"
+                or after_area != area
+                or _OBJECT_ID_PATTERN.fullmatch(after_id) is None
+            ):
+                raise StoredFileNotFoundError("storage pagination key is invalid")
+        else:
+            after_id = ""
+        object_ids = sorted(
+            item.name
+            for item in area_path.iterdir()
+            if item.is_dir() and _OBJECT_ID_PATTERN.fullmatch(item.name) is not None
+        )
+        selected = (object_id for object_id in object_ids if object_id > after_id)
+        return tuple(self.metadata(f"{area}/{object_id}") for object_id in list(selected)[:limit])
+
+    def verify_hash(self, key: str, *, expected_sha256: str | None = None) -> str:
+        """Re-read the complete object so size and digest are independently verified."""
+        with self.open_read(key):
+            metadata = self.metadata(key)
+        if expected_sha256 is not None and not re.fullmatch(_SHA256_PATTERN, expected_sha256):
+            raise ValueError("expected SHA-256 digest is invalid")
+        if expected_sha256 is not None and metadata.sha256 != expected_sha256:
+            raise StoredFileIntegrityError("stored file digest does not match the expected digest")
+        return metadata.sha256
+
+    def storage_reference(self, key: str) -> str:
+        """Validate and return the existing opaque key as the portable storage reference."""
+        return self.metadata(key).key
+
     def delete(self, key: str, *, approval: PhysicalDeletionApproval | None = None) -> None:
         """Deny deletion by default and remove only a cleared, explicitly approved object."""
         if approval is None or not approval.references_checked or not approval.reason.strip():

@@ -2,6 +2,7 @@
 
 import os
 from collections.abc import Callable, Iterator
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -179,3 +180,29 @@ def test_provider_error_is_recorded_without_fake_success(engine: Engine) -> None
         assert call.duration_ms == 250
         assert call.input_tokens == 0
         assert call.estimated_cost is None
+
+
+def test_concurrent_overlapping_price_windows_are_serialized(engine: Engine) -> None:
+    repository = PostgreSQLAITelemetryRepository(create_session_factory(engine))
+
+    def add(version: str) -> str:
+        try:
+            repository.add_price(
+                provider="openai",
+                model="concurrent-model",
+                version=version,
+                effective_from=datetime(2026, 1, 1, tzinfo=UTC),
+                effective_to=None,
+                input_per_million=Decimal("1"),
+                cached_input_per_million=Decimal("1"),
+                output_per_million=Decimal("1"),
+            )
+        except ValueError as exc:
+            assert "overlap" in str(exc)
+            return "rejected"
+        return "inserted"
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        outcomes = list(executor.map(add, ("concurrent-a", "concurrent-b")))
+
+    assert sorted(outcomes) == ["inserted", "rejected"]

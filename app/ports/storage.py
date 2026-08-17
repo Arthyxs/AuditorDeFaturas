@@ -63,5 +63,16 @@ class StorageProvider(Protocol):
     def metadata(self, key: str) -> StoredFileMetadata:
         """Read immutable file metadata."""
 
+    def list_files(
+        self, area: str, *, after: str | None = None, limit: int = 100
+    ) -> tuple[StoredFileMetadata, ...]:
+        """List immutable objects by portable area/key pagination."""
+
+    def verify_hash(self, key: str, *, expected_sha256: str | None = None) -> str:
+        """Recalculate a stored object's digest and optionally compare an expected digest."""
+
+    def storage_reference(self, key: str) -> str:
+        """Return a verified provider-opaque reference without exposing a filesystem path."""
+
     def delete(self, key: str, *, approval: PhysicalDeletionApproval | None = None) -> None:
         """Physically delete only with explicit approval and cleared references."""

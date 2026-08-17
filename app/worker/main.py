@@ -60,32 +60,33 @@ class WorkerRunner:
         if job is None:
             return None
 
-        stop_heartbeat = Event()
-        heartbeat_thread = Thread(
-            target=self._renew_lease,
-            args=(job, stop_heartbeat),
-            name=f"job-heartbeat-{job.id}",
-            daemon=True,
-        )
-        heartbeat_thread.start()
-        try:
-            handler = self._handlers.get(job.job_type)
-            if handler is None:
-                raise LookupError(f"no handler registered for job type {job.job_type!r}")
-            handler(job)
-        except Exception as exc:
-            self._queue.fail(
-                job.id,
-                worker_id=self._worker_id,
-                now=datetime.now(UTC),
-                error=_safe_error(exc),
-                retry_delay=self._retry_delay(job.attempts),
+        with self._queue.execution_guard(job.id):
+            stop_heartbeat = Event()
+            heartbeat_thread = Thread(
+                target=self._renew_lease,
+                args=(job, stop_heartbeat),
+                name=f"job-heartbeat-{job.id}",
+                daemon=True,
             )
-        else:
-            self._queue.succeed(job.id, worker_id=self._worker_id, now=datetime.now(UTC))
-        finally:
-            stop_heartbeat.set()
-            heartbeat_thread.join(timeout=self._settings.worker_heartbeat_interval_seconds + 1)
+            heartbeat_thread.start()
+            try:
+                handler = self._handlers.get(job.job_type)
+                if handler is None:
+                    raise LookupError(f"no handler registered for job type {job.job_type!r}")
+                handler(job)
+            except Exception as exc:
+                self._queue.fail(
+                    job.id,
+                    worker_id=self._worker_id,
+                    now=datetime.now(UTC),
+                    error=_safe_error(exc),
+                    retry_delay=self._retry_delay(job.attempts),
+                )
+            else:
+                self._queue.succeed(job.id, worker_id=self._worker_id, now=datetime.now(UTC))
+            finally:
+                stop_heartbeat.set()
+                heartbeat_thread.join(timeout=self._settings.worker_heartbeat_interval_seconds + 1)
         return job
 
     def _retry_delay(self, attempts: int) -> timedelta:

@@ -146,6 +146,21 @@ def test_new_provider_instance_reads_existing_immutable_file(tmp_path: Path) -> 
         assert stream.read() == PDF
 
 
+def test_portable_listing_hash_verification_and_reference(tmp_path: Path) -> None:
+    storage: StorageProvider = provider(tmp_path)
+    first = storage.store("tariffs", "a.pdf", "application/pdf", io.BytesIO(PDF))
+    second = storage.store("tariffs", "b.pdf", "application/pdf", io.BytesIO(PDF))
+
+    listed = storage.list_files("tariffs", limit=1)
+    assert len(listed) == 1
+    remaining = storage.list_files("tariffs", after=listed[0].key, limit=10)
+    assert {item.key for item in (*listed, *remaining)} == {first.key, second.key}
+    assert storage.verify_hash(first.key, expected_sha256=first.sha256) == first.sha256
+    assert storage.storage_reference(first.key) == first.key
+    with pytest.raises(StoredFileIntegrityError, match="expected digest"):
+        storage.verify_hash(first.key, expected_sha256="0" * 64)
+
+
 def test_identifier_collision_never_overwrites_existing_file(tmp_path: Path) -> None:
     """A generated identifier collision retries and preserves both objects."""
     first_id = UUID("11111111-1111-1111-1111-111111111111")

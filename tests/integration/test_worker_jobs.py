@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import Event, Thread
 from typing import Any
 from uuid import uuid4
 
@@ -219,6 +220,45 @@ def test_heartbeat_and_crash_recovery_are_lease_safe(
     assert not queue.heartbeat(resumed.id, worker_id="wrong-worker", now=heartbeat_time)
     completed = queue.succeed(resumed.id, worker_id="replacement-worker", now=heartbeat_time)
     assert completed.status == JobStatus.SUCCEEDED
+
+
+def test_stale_recovery_cannot_reclaim_an_active_handler(
+    queue: PostgreSQLJobQueue, database_engine: Engine, postgres_database_url: str
+) -> None:
+    job = _enqueue(queue, "guarded-handler", job_type="guarded.handler")
+    entered = Event()
+    release = Event()
+
+    def handler(_: Any) -> None:
+        entered.set()
+        assert release.wait(timeout=10)
+
+    runner = WorkerRunner(
+        queue,
+        _settings(
+            postgres_database_url,
+            worker_heartbeat_interval_seconds=30,
+            worker_job_lease_seconds=5,
+        ),
+        worker_id="guarded-worker",
+        handlers={"guarded.handler": handler},
+    )
+    thread = Thread(target=lambda: runner.run_once(include_schedule=False))
+    thread.start()
+    assert entered.wait(timeout=10)
+
+    recovered = queue.recover_stale(
+        now=datetime.now(UTC) + timedelta(minutes=1),
+        lease_timeout=timedelta(seconds=1),
+        retry_delay=timedelta(seconds=1),
+    )
+    assert recovered == []
+    assert _load(database_engine, job.id).status == JobStatus.RUNNING
+
+    release.set()
+    thread.join(timeout=10)
+    assert not thread.is_alive()
+    assert _load(database_engine, job.id).status == JobStatus.SUCCEEDED
 
 
 def test_scheduling_uses_window_keys_and_respects_availability(

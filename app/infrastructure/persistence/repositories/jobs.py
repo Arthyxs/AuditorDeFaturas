@@ -1,10 +1,13 @@
 """PostgreSQL durable queue adapter."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime, timedelta
+from hashlib import sha256
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import or_, select
+from sqlalchemy import Engine, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -43,6 +46,23 @@ class PostgreSQLJobQueue:
 
     def __init__(self, session_factory: SessionFactory) -> None:
         self._session_factory = session_factory
+        engine = session_factory.kw.get("bind")
+        if not isinstance(engine, Engine):
+            raise TypeError("job queue requires a SQLAlchemy Engine-bound session factory")
+        self._engine = engine
+
+    @contextmanager
+    def execution_guard(self, job_id: UUID) -> Iterator[None]:
+        """Hold a session advisory lock until the handler finishes or the process disconnects."""
+        key = _execution_advisory_key(job_id)
+        with self._engine.connect() as connection:
+            connection.execute(select(func.pg_advisory_lock(key)))
+            connection.commit()
+            try:
+                yield
+            finally:
+                connection.execute(select(func.pg_advisory_unlock(key)))
+                connection.commit()
 
     def enqueue(
         self,
@@ -176,6 +196,11 @@ class PostgreSQLJobQueue:
                 .with_for_update(skip_locked=True)
             ).all()
             for job in jobs:
+                execution_finished = database.scalar(
+                    select(func.pg_try_advisory_xact_lock(_execution_advisory_key(job.id)))
+                )
+                if not execution_finished:
+                    continue
                 job.last_error = "worker lease expired before completion"
                 job.locked_by = None
                 if job.attempts < job.max_attempts:
@@ -196,3 +221,9 @@ class PostgreSQLJobQueue:
         if job is None or job.status != JobStatus.RUNNING or job.locked_by != worker_id:
             raise JobLeaseError("worker no longer owns this running job")
         return job
+
+
+def _execution_advisory_key(job_id: UUID) -> int:
+    payload = sha256(f"job-execution:{job_id}".encode("ascii")).digest()[:8]
+    unsigned = int.from_bytes(payload, "big")
+    return unsigned - (1 << 64) if unsigned >= (1 << 63) else unsigned
