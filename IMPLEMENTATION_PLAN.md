@@ -520,6 +520,7 @@ scheduler cria um tick por janela, locks advisory transacionais excluem processa
 por UUID de fatura e `POST /api/worker/run-now` exige origem e papel de escrita. Oito testes M09
 passaram em PostgreSQL real, além da suíte completa, Alembic sem drift, gates estáticos, build e
 Compose saudável. Nenhuma integração IMAP ou regra de M10 foi antecipada.
+Commit técnico: `de9f7faa1eb41778075f8312f9dcc52f48b10955`.
 
 ### M10 — Provider IMAP, MIME e contexto de thread
 

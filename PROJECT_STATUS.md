@@ -39,8 +39,8 @@ não implementa IMAP, classificação ou qualquer regra pertencente a M10 e mile
   `f3c8538f7d45575557c3ef347723edccd8b8b499`.
 - **M08 — Interface de gestão de tarifários:** concluído em 2026-08-17;
   `17fbdabdd0d87796fc783e6ae06e8b9888729776`.
-- **M09 — Worker durável, scheduler e locks:** concluído em 2026-08-17; commit técnico em
-  fechamento.
+- **M09 — Worker durável, scheduler e locks:** concluído em 2026-08-17;
+  `de9f7faa1eb41778075f8312f9dcc52f48b10955`.
 
 ## Estrutura entregue até M09
 
@@ -134,6 +134,8 @@ não implementa IMAP, classificação ou qualquer regra pertencente a M10 e mile
   `f3c8538f7d45575557c3ef347723edccd8b8b499`;
 - commit técnico de conclusão do M08 presente localmente e em `origin/main`:
   `17fbdabdd0d87796fc783e6ae06e8b9888729776`;
+- commit técnico de conclusão do M09 presente localmente e em `origin/main`:
+  `de9f7faa1eb41778075f8312f9dcc52f48b10955`;
 - divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
@@ -216,9 +218,9 @@ tarifários não repete a inversão de dependência registrada em REVIEW-005.
 
 ## Último commit estável
 
-`17fbdabdd0d87796fc783e6ae06e8b9888729776` — `feat: add M08 tariff management frontend`
+`de9f7faa1eb41778075f8312f9dcc52f48b10955` — `feat: add M09 durable PostgreSQL worker`
 
-Este é o commit técnico final do M08, enviado a `origin/main`.
+Este é o commit técnico final do M09, enviado a `origin/main`.
 
 ## Próxima ação recomendada
 
