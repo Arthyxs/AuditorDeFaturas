@@ -29,6 +29,8 @@ from app.ports.storage import (
 _AREA_PATTERN = re.compile(r"[a-z][a-z0-9_-]{0,31}\Z")
 _OBJECT_ID_PATTERN = re.compile(r"[0-9a-f]{32}\Z")
 _SHA256_PATTERN = re.compile(r"[0-9a-f]{64}\Z")
+_OPAQUE_EXTENSION_PATTERN = re.compile(r"\.[a-z0-9]{1,15}\Z")
+_MIME_PATTERN = re.compile(r"[a-z0-9!#$&^_.+-]+/[a-z0-9!#$&^_.+-]+\Z")
 _CHUNK_SIZE = 1024 * 1024
 
 
@@ -54,6 +56,35 @@ class LocalStorageProvider(StorageProvider):
         self, area: str, original_filename: str, mime_type: str, source: BinaryIO
     ) -> StoredFileMetadata:
         """Stream, validate and atomically publish an immutable object directory."""
+        return self._store(
+            area,
+            original_filename,
+            mime_type,
+            source,
+            validate_document=True,
+        )
+
+    def store_original(
+        self, area: str, original_filename: str, mime_type: str, source: BinaryIO
+    ) -> StoredFileMetadata:
+        """Preserve bounded original bytes with safe metadata but no execution or parsing."""
+        return self._store(
+            area,
+            original_filename,
+            mime_type,
+            source,
+            validate_document=False,
+        )
+
+    def _store(
+        self,
+        area: str,
+        original_filename: str,
+        mime_type: str,
+        source: BinaryIO,
+        *,
+        validate_document: bool,
+    ) -> StoredFileMetadata:
         area_path = self._area_path(area)
         staging_parent = area_path / ".staging"
         staging_parent.mkdir(mode=0o700, exist_ok=True)
@@ -63,27 +94,44 @@ class LocalStorageProvider(StorageProvider):
 
         try:
             digest, size = self._write_staged(payload_path, source)
-            validated = self._validator.validate(
-                payload_path,
-                original_filename=original_filename,
-                declared_mime=mime_type,
-                size=size,
-            )
+            if validate_document and size < 1:
+                raise UploadValidationError("empty files are not accepted")
+            if validate_document:
+                validated = self._validator.validate(
+                    payload_path,
+                    original_filename=original_filename,
+                    declared_mime=mime_type,
+                    size=size,
+                )
+                normalized_filename = validated.original_filename
+                extension = validated.extension
+                normalized_mime = validated.mime_type
+                content_kind = "validated_upload"
+            else:
+                normalized_filename = validate_original_filename(original_filename)
+                extension = Path(normalized_filename).suffix.casefold()
+                if _OPAQUE_EXTENSION_PATTERN.fullmatch(extension) is None:
+                    extension = ""
+                normalized_mime = mime_type.partition(";")[0].strip().casefold()
+                if _MIME_PATTERN.fullmatch(normalized_mime) is None:
+                    raise UploadValidationError("original MIME type is invalid")
+                content_kind = "opaque_original"
             object_id = self._unique_object_id(area_path)
             key = f"{area}/{object_id}"
-            internal_filename = f"{object_id}{validated.extension}"
+            internal_filename = f"{object_id}{extension}"
             final_payload = staging_path / internal_filename
             payload_path.rename(final_payload)
             created_at = datetime.now(UTC)
             metadata = StoredFileMetadata(
                 key=key,
-                original_filename=validated.original_filename,
+                original_filename=normalized_filename,
                 internal_filename=internal_filename,
-                extension=validated.extension,
-                mime_type=validated.mime_type,
+                extension=extension,
+                mime_type=normalized_mime,
                 size=size,
                 sha256=digest,
                 created_at=created_at,
+                content_kind=content_kind,
             )
             self._write_metadata(staging_path / "metadata.json", metadata)
             final_payload.chmod(0o440)
@@ -139,6 +187,7 @@ class LocalStorageProvider(StorageProvider):
                 size=int(raw["size"]),
                 sha256=str(raw["sha256"]),
                 created_at=datetime.fromisoformat(str(raw["created_at"])),
+                content_kind=str(raw.get("content_kind", "validated_upload")),
             )
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
             raise StoredFileIntegrityError("stored file metadata is invalid") from exc
@@ -232,6 +281,7 @@ class LocalStorageProvider(StorageProvider):
                 "size": metadata.size,
                 "sha256": metadata.sha256,
                 "created_at": metadata.created_at.isoformat(),
+                "content_kind": metadata.content_kind,
             },
             ensure_ascii=False,
             sort_keys=True,
@@ -249,16 +299,29 @@ class LocalStorageProvider(StorageProvider):
             validate_original_filename(metadata.original_filename)
         except UploadValidationError as exc:
             raise StoredFileIntegrityError("stored original filename is invalid") from exc
-        upload_type = UPLOAD_TYPES.get(metadata.extension)
-        if (
+        common_invalid = (
             metadata.key != key
-            or metadata.size < 1
+            or metadata.size < 0
             or _SHA256_PATTERN.fullmatch(metadata.sha256) is None
+            or metadata.internal_filename != f"{object_id}{metadata.extension}"
+            or metadata.created_at.tzinfo is None
+        )
+        upload_type = UPLOAD_TYPES.get(metadata.extension)
+        validated_upload_invalid = metadata.content_kind == "validated_upload" and (
+            metadata.size < 1
             or upload_type is None
             or Path(metadata.original_filename).suffix.casefold() != metadata.extension
             or metadata.mime_type != upload_type.canonical_mime
-            or metadata.internal_filename != f"{object_id}{metadata.extension}"
-            or metadata.created_at.tzinfo is None
+        )
+        opaque_original_invalid = metadata.content_kind == "opaque_original" and (
+            (_OPAQUE_EXTENSION_PATTERN.fullmatch(metadata.extension) is None and metadata.extension)
+            or _MIME_PATTERN.fullmatch(metadata.mime_type) is None
+        )
+        if (
+            common_invalid
+            or validated_upload_invalid
+            or opaque_original_invalid
+            or metadata.content_kind not in {"validated_upload", "opaque_original"}
         ):
             raise StoredFileIntegrityError("stored file metadata failed integrity validation")
 

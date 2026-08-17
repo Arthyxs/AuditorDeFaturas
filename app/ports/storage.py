@@ -17,6 +17,7 @@ class StoredFileMetadata:
     size: int
     sha256: str
     created_at: datetime
+    content_kind: str = "validated_upload"
 
 
 @dataclass(frozen=True)
@@ -50,6 +51,11 @@ class StorageProvider(Protocol):
         self, area: str, original_filename: str, mime_type: str, source: BinaryIO
     ) -> StoredFileMetadata:
         """Validate and atomically publish an immutable file."""
+
+    def store_original(
+        self, area: str, original_filename: str, mime_type: str, source: BinaryIO
+    ) -> StoredFileMetadata:
+        """Preserve exact untrusted original bytes without treating them as executable content."""
 
     def open_read(self, key: str) -> BinaryIO:
         """Open verified stored bytes for reading."""

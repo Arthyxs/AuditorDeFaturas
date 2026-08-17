@@ -1,18 +1,9 @@
 """Provider-neutral bounded e-mail thread resolution."""
 
-import re
-import unicodedata
 from datetime import UTC, datetime
 
+from app.domain.email.fingerprint import normalize_subject
 from app.ports.email import EmailMessage, EmailThreadContext
-
-_REPLY_PREFIX = re.compile(r"^(?:(?:re|fw|fwd|enc|res)\s*:\s*)+", re.IGNORECASE)
-
-
-def normalize_subject(value: str) -> str:
-    """Normalize transport noise for a weak, never-exclusive thread signal."""
-    normalized = unicodedata.normalize("NFKC", value).strip().casefold()
-    return " ".join(_REPLY_PREFIX.sub("", normalized).split())
 
 
 def _timestamp(message: EmailMessage) -> datetime:
