@@ -494,6 +494,7 @@ arquivo, lista paginada, busca/status, detalhe, download, SHA-256, uso quando di
 linhagem, edição, ativação e soft delete. Seis testes Vitest/Testing Library aprovaram o fluxo
 integrado e permissões `VIEWER`; ESLint, TypeScript, Vite e build Docker executando os testes
 passaram. O bundle servido pelo Compose carregou sem erro de console na inspeção visual local.
+Commit técnico: `17fbdabdd0d87796fc783e6ae06e8b9888729776`.
 
 ### M09 — Worker durável, scheduler e locks
 

@@ -36,7 +36,8 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - **M06 — Storage local imutável e uploads seguros:** concluído em 2026-08-16.
 - **M07 — Catálogo e API de tarifários:** concluído em 2026-08-17;
   `f3c8538f7d45575557c3ef347723edccd8b8b499`.
-- **M08 — Interface de gestão de tarifários:** concluído em 2026-08-17; commit técnico em fechamento.
+- **M08 — Interface de gestão de tarifários:** concluído em 2026-08-17;
+  `17fbdabdd0d87796fc783e6ae06e8b9888729776`.
 
 ## Estrutura entregue até M08
 
@@ -123,6 +124,8 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`;
 - commit técnico de conclusão do M07 presente localmente e em `origin/main`:
   `f3c8538f7d45575557c3ef347723edccd8b8b499`;
+- commit técnico de conclusão do M08 presente localmente e em `origin/main`:
+  `17fbdabdd0d87796fc783e6ae06e8b9888729776`;
 - divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
@@ -202,9 +205,9 @@ tarifários não repete a inversão de dependência registrada em REVIEW-005.
 
 ## Último commit estável
 
-`f3c8538f7d45575557c3ef347723edccd8b8b499` — `feat: add M07 tariff catalog API`
+`17fbdabdd0d87796fc783e6ae06e8b9888729776` — `feat: add M08 tariff management frontend`
 
-Este é o commit técnico final do M07, enviado a `origin/main`.
+Este é o commit técnico final do M08, enviado a `origin/main`.
 
 ## Próxima ação recomendada
 
