@@ -30,7 +30,8 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
 - **M04 — Persistência, migrations e transações:** concluído em 2026-08-16.
 - **M05 — Autenticação, RBAC e primeiro administrador:** concluído em 2026-08-16.
 - **M06 — Storage local imutável e uploads seguros:** concluído em 2026-08-16.
-- **M07 — Catálogo e API de tarifários:** concluído em 2026-08-17; commit técnico em fechamento.
+- **M07 — Catálogo e API de tarifários:** concluído em 2026-08-17;
+  `f3c8538f7d45575557c3ef347723edccd8b8b499`.
 
 ## Estrutura entregue até M07
 
@@ -111,6 +112,8 @@ O worker do M02 mantém apenas o processo e seu heartbeat; jobs duráveis perman
   `cb112e223018b939bca646007633caae2510234a`;
 - commit técnico da remediação da revisão:
   `97fb4da3811983e2c6e26d8558cb9989b56a5d2b`;
+- commit técnico de conclusão do M07 presente localmente e em `origin/main`:
+  `f3c8538f7d45575557c3ef347723edccd8b8b499`;
 - divergência local/remoto após o push desta remediação: `0` à frente, `0` atrás;
 - revisão pré-commit: sem `.env`, segredos, dados operacionais ou artefatos gerados no
   conjunto destinado ao commit.
@@ -188,9 +191,9 @@ tarifários não repete a inversão de dependência registrada em REVIEW-005.
 
 ## Último commit estável
 
-`97fb4da3811983e2c6e26d8558cb9989b56a5d2b` — `fix: resolve high-severity foundation review findings`
+`f3c8538f7d45575557c3ef347723edccd8b8b499` — `feat: add M07 tariff catalog API`
 
-Este é o commit técnico final das correções CRITICAL/HIGH solicitadas.
+Este é o commit técnico final do M07, enviado a `origin/main`.
 
 ## Próxima ação recomendada
 

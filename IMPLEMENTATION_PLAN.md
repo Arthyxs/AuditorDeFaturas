@@ -471,6 +471,7 @@ migration `20260817_0003`. A matriz `ADMIN`/`OPERATOR`/`VIEWER`, os sete formato
 hash, nomes duplicados, linhagem e preservação do blob foram aprovados. Suíte completa: 74
 testes aprovados e 3 skips condicionais; os 2 testes Docker de storage foram executados
 separadamente. Ruff, format, mypy, Alembic sem drift, build e Compose saudáveis aprovados.
+Commit técnico: `f3c8538f7d45575557c3ef347723edccd8b8b499`.
 
 ### M08 — Interface de gestão de tarifários
 
